@@ -3193,6 +3193,24 @@
                                 color: var(--pp-pt-dsb-ptl-pt-ptm-pte-promptTagValueEmbeddingTag-color);
                             }
 
+                            // #278: BREAK/AND keyword separator style
+                            &.keyword-separator-tag {
+                                display: flex !important;
+                                align-items: center;
+                                justify-content: center;
+                                width: 100%;
+                                gap: 8px;
+                                background: transparent !important;
+                                border-color: transparent !important;
+                                color: rgba(148, 163, 184, .6) !important;
+                                font-size: .78em;
+                                letter-spacing: .05em;
+                                cursor: default;
+                                pointer-events: none;
+                                .break-character { opacity: .4; }
+                                .keyword-label { font-weight: 700; font-size: 1.05em; }
+                            }
+
                             &:hover {
                                 border-color: var(--pp-pt-dsb-ptl-pt-ptm-pte-promptTagValueHover-border-color);
                                 background: var(--pp-pt-dsb-ptl-pt-ptm-pte-promptTagValueHover-background);
@@ -5295,5 +5313,26 @@
 
         // .physton-prompt .prompt-tags .group-tabs .group-body .group-main .sub-group-main .tags-footer .tags-copyright
         --pp-pt-gt-gb-gm-sgm-tf-tagsCopyRight-color: rgba(255, 255, 255, 0.85);
+    }
+}
+// #278: BREAK/AND keyword-tag outer container
+.physton-prompt .prompt-tags .prompt-tags-list .prompt-tag.keyword-tag {
+    width: 100%;
+    .prompt-tag-main {
+        justify-content: center;
+        .btn-tag-delete, .btn-tag-extend { display: none !important; }
+    }
+}
+
+// #330: Favorites export/import action bar
+.physton-prompt-favorite .popup-actions {
+    display: flex; gap: 4px; padding: 4px 6px 2px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    .popup-action-btn {
+        display: flex; align-items: center; gap: 4px;
+        font-size: .75em; padding: 2px 6px; border-radius: 3px;
+        cursor: pointer; color: rgba(148,163,184,.8); transition: all .15s;
+        &:hover { background: rgba(255,255,255,.08); color: #fff; }
+        .icon-svg { width: 12px; height: 12px; }
     }
 }

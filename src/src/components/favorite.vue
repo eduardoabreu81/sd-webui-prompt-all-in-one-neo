@@ -2,6 +2,17 @@
     <Transition name="fade">
         <div class="physton-prompt-favorite" ref="favorite" v-show="isShow" @mouseenter="onMouseEnter"
              @mouseleave="onMouseLeave" @click.stop="">
+            <!-- export / import actions (#330) -->
+            <div class="popup-actions">
+                <div class="popup-action-btn" @click="exportFavorites" :title="'Export favorites as JSON'">
+                    <icon-svg name="copy"/> Export
+                </div>
+                <label class="popup-action-btn" :title="'Import favorites from JSON'">
+                    <icon-svg name="use"/> Import
+                    <input ref="importInput" type="file" accept=".json" style="display:none"
+                           @change="onImportFileChange"/>
+                </label>
+            </div>
             <div class="popup-tabs">
                 <div v-for="(group) in favorites" :key="group.key"
                      :class="['popup-tab', group.key === favoriteKey ? 'active': '']" @click="onTabClick(group.key)">
@@ -299,6 +310,58 @@ export default {
                     window.phystonPromptfavorites = this.favorites
                 }
             })
+        },
+
+        // ---- Export / Import (#330) -----------------------------------------
+        /**
+         * Download all favorite groups as a single JSON file.
+         * Format: { [groupKey]: [items...], ... }
+         */
+        exportFavorites() {
+            const data = {}
+            this.favorites.forEach(group => {
+                data[group.key] = group.list
+            })
+            const json = JSON.stringify(data, null, 2)
+            const blob = new Blob([json], {type: 'application/json'})
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'paio-neo-favorites.json'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+        },
+        /** Trigger the hidden file input */
+        importFavorites() {
+            this.$refs.importInput.click()
+        },
+        /** Read the selected JSON file and merge into storage */
+        async onImportFileChange(e) {
+            const file = e.target.files[0]
+            if (!file) return
+            try {
+                const text = await file.text()
+                const data = JSON.parse(text)
+                if (typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid format')
+                const validKeys = this.favorites.map(g => g.key)
+                for (const key of Object.keys(data)) {
+                    if (!validKeys.includes(key)) continue
+                    const list = data[key]
+                    if (!Array.isArray(list)) continue
+                    await this.gradioAPI.setData('favorite.' + key, list)
+                }
+                // Reload all groups from storage
+                for (const group of this.favorites) {
+                    await this.getFavorites(group.key)
+                }
+                this.$toastr.success('Favorites imported!')
+            } catch (err) {
+                this.$toastr.error('Import failed: ' + err.message)
+            } finally {
+                e.target.value = ''
+            }
         },
     }
 }

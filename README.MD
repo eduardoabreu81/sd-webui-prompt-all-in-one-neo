@@ -23,7 +23,7 @@
 ## 📋 Table of Contents
 
 - [Neo Versioning](#-neo-versioning)
-- [What's New](#-whats-new--v020)
+- [What's New](#-whats-new--v030)
 - [Release Story](#-release-story)
 - [Roadmap](#️-roadmap)
 - [Features](#-features)
@@ -46,21 +46,28 @@ Neo uses semantic versioning:
 
 ---
 
-## 🆕 What's New — v0.2.0
+## 🆕 What's New — v0.3.0
 
-> **Quality Presets + Settings Foundation** — per-checkpoint quality tag presets with CivitAI auto-detection, auto-injection on model switch, and the first settings migrated into Forge's native Settings panel.
+> **UX Features** — two of the most-requested community improvements: visual section dividers for `BREAK` / `AND` tokens and a full export/import system for the Favorites list.
 
-- **🎨 Quality Presets panel** — three-tab modal (Templates / Checkpoints / Custom) accessible via the ⭐ button on each prompt ⭐
-- **📋 Templates tab** — built-in quality tag templates for every major model family (Pony, NoobAI, Illustrious, SDXL 1.0/Turbo/Lightning, SD 1.5/2.1, Flux.1 D/S); each family independently enable/disable; editable positive + negative tag overrides per family ⭐
-- **🔍 Checkpoints tab** — lists all installed checkpoints; per-row **Detect** button queries CivitAI by SHA-256 hash to identify model family; **Scan All** for batch detection; results cached locally (never calls the API twice for the same file) ⭐
-- **📝 Custom tab** — user-defined presets matched by filename substring, with optional **auto-insert on model load** flag ⭐
-- **⚡ Auto-inject on checkpoint switch** — when you switch models mid-session, if the resolved preset has auto-insert enabled the quality tags are prepended to the active tab automatically ⭐
-- **🔒 CivitAI API key in Forge Settings** — moved from localStorage to **Settings → Prompt All-in-One Neo**; sensitive data no longer stored in browser storage ⭐
-- **🛡️ Duplicate-safe insertion** — `prependTags()` checks the current tag list before inserting; existing quality tags are never doubled ⭐
+- **🔀 BREAK / AND visual separator** — `BREAK` and `AND` tokens now render as a full-width `— BREAK —` divider line in the tag area, making attention-split boundaries instantly visible regardless of any auto-break settings ⭐ (#278)
+- **📤 Export Favorites** — one-click download of all four favorites groups (txt2img positive/negative, img2img positive/negative) as a single `paio-neo-favorites.json` file ⭐ (#330)
+- **📥 Import Favorites** — upload a previously exported JSON to restore or merge favorites across installs; each group is validated before writing ⭐ (#330)
 
 ---
 
 ## 📖 Release Story
+
+### v0.3.0
+> **Theme: UX Features** — BREAK/AND visual separators and Favorites export/import, addressing the two most-voted open issues from the upstream physton repo.
+
+- [x] `tagMixin.js` `_setTagClass()`: added `tag.isKeyword` flag; when `tag.value === 'BREAK' || tag.value === 'AND'` set `tag.isKeyword = true` and override inner class to `keyword-separator-tag` (#278)
+- [x] `tagMixin.js` `renderTag()`: removed `autoBreakBeforeWrap || autoBreakAfterWrap` guard — BREAK/AND now always render as `— LABEL —` HTML (#278)
+- [x] `phystonPrompt.vue`: outer `.prompt-tag` container receives `keyword-tag` class when `tag.isKeyword === true` — enables full-width block layout via CSS (#278)
+- [x] `favorite.vue`: added `popup-actions` bar with **Export** button and **Import** file-input above the tabs (#330)
+- [x] `favorite.vue` `exportFavorites()`: JSON-encodes all four favorite groups and triggers browser download as `paio-neo-favorites.json` (#330)
+- [x] `favorite.vue` `onImportFileChange()`: parses uploaded JSON, validates keys, writes each group via `gradioAPI.setData('favorite.{key}', list)`, then reloads all groups (#330)
+- [x] `styles/main.min.css` + `styles/main.less`: new CSS rules for `.keyword-tag` (full-width container, hide delete/extend buttons) and `.popup-actions` (export/import bar styling)
 
 ### v0.2.0
 > **Theme: Quality Presets + Settings Foundation** — full Quality Presets system with CivitAI integration, auto-inject on model switch, and first step of settings migration.
@@ -127,9 +134,9 @@ User-defined per-checkpoint quality tag presets with CivitAI integration, plus t
 - Detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template ✅
 - Deferred to follow-up: `modelspec.trigger_phrase` pre-population; translation API keys settings migration
 
-### v0.3.0 — UX Features *(planned)*
-- Export / import favorites list (#330)
-- Visual BREAK / AND separator in the tag area (#278)
+### v0.3.0 — UX Features *(complete)*
+- Visual BREAK / AND separator in the tag area (#278) ✅
+- Export / import favorites list (#330) ✅
 
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved

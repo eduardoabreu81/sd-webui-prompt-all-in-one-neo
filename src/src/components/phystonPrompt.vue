@@ -294,7 +294,7 @@
                 <div class="prompt-tags-list" ref="promptTagsList">
                     <!--<TransitionGroup name="fadeLeft">-->
                     <div v-for="(tag, index) in tags" :key="tag.id"
-                         :class="['prompt-tag', tag.disabled ? 'disabled': '', tag.type === 'wrap' ? 'wrap-tag' : '']"
+                         :class="['prompt-tag', tag.disabled ? 'disabled': '', tag.type === 'wrap' ? 'wrap-tag' : '', tag.isKeyword ? 'keyword-tag' : '']"
                          :ref="'promptTag-' + tag.id" :data-id="tag.id">
                         <div class="prompt-tag-main"
                              @mouseenter="onTagMouseEnter(tag.id)"

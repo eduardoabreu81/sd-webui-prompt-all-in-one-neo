@@ -74,6 +74,7 @@ export default {
             tag.isLyco = false
             tag.lycoExists = false
             tag.isEmbedding = false
+            tag.isKeyword = false
 
             if (typeof tag['type'] === 'string' && tag.type === 'wrap') {
             } else {
@@ -140,7 +141,14 @@ export default {
             }
 
             tag.classes = classes
-            return classes
+            // Mark BREAK and AND as visual keyword separators (#278).
+            // These get rendered differently in the tag chip area.
+            if (!tag.isLora && !tag.isLyco && !tag.isEmbedding &&
+                (tag.value === 'BREAK' || tag.value === 'AND')) {
+                tag.isKeyword = true
+                tag.classes = ['prompt-tag-value', 'keyword-separator-tag']
+            }
+            return tag.classes
         },
         _setTagById(id, value = null, localValue = null) {
             let tag = this.tags.find(tag => tag.id === id)
@@ -196,8 +204,10 @@ export default {
             let tag = this.tags.find(tag => tag.id === id)
             if (!tag) return ''
             let value = tag.value
-            if (value === 'BREAK' && (this.autoBreakBeforeWrap || this.autoBreakAfterWrap)) {
-                value = '<div class="break-character">---------------------</div> <div class="character">BREAK</div> <div class="break-character">---------------------</div>'
+            // BREAK and AND are always rendered as visual section separators (#278).
+            // Previously only rendered specially when autoBreakBeforeWrap/AfterWrap was on.
+            if (value === 'BREAK' || value === 'AND') {
+                return '<span class="break-character">—</span> <span class="keyword-label">' + value + '</span> <span class="break-character">—</span>'
             } else {
                 value = common.escapeHtml(value)
                 if (tag.incWeight > 0) {
