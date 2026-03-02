@@ -1,12 +1,16 @@
-# sd-webui-prompt-all-in-one
+# ✏️ Prompt All-in-One Neo
 
-[![GitHub stars](https://img.shields.io/github/stars/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/network/members)
-[![GitHub issues](https://img.shields.io/github/issues/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/issues)
-[![GitHub issues closed](https://img.shields.io/github/issues-closed/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/issues?q=is%3Aissue+is%3Aclosed)
-[![GitHub license](https://img.shields.io/github/license/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/blob/master/LICENSE.md)
-[![GitHub commits](https://img.shields.io/github/last-commit/Physton/sd-webui-prompt-all-in-one?style=flat-square)](https://github.com/Physton/sd-webui-prompt-all-in-one/commits/main)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/1441a696-a1a4-4ad7-b520-4abfd96acc76/deploy-status)](https://app.netlify.com/sites/aiodoc/deploys)
+<div align="center">
+
+[![Forge Neo](https://img.shields.io/badge/Forge-Neo-blue)](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/eduardoabreu81/sd-webui-prompt-all-in-one-neo?style=flat-square)](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/stargazers)
+
+> **Extension for [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo)**
+
+</div>
+
+> ⚠️ **This is a fork.** All core functionality was created by [Physton](https://github.com/Physton) in the original [sd-webui-prompt-all-in-one](https://github.com/Physton/sd-webui-prompt-all-in-one). This Neo fork exists solely to maintain compatibility with Forge Neo and to apply community-reported UX fixes that were never merged upstream. If you are not running Forge Neo, **please use the original extension instead**.
 
 <div align="center">
 
@@ -14,160 +18,326 @@
 
 </div>
 
-sd-webui-prompt-all-in-one is an extension based on [stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that aims to improve the user experience of the prompt/negative prompt input box. It has a more intuitive and powerful input interface, provides automatic translation, history and collection functions, and supports multiple languages to meet the needs of different users.
+---
+
+## 📋 Table of Contents
+
+- [Neo Versioning](#-neo-versioning)
+- [What's New](#-whats-new--v011)
+- [Release Story](#-release-story)
+- [Roadmap](#️-roadmap)
+- [Features](#-features)
+- [Demo](#-demo)
+- [Installation](#-installation)
+- [Language Support](#-language-support)
+- [Translation APIs](#-translation-apis)
+- [Credits](#-credits)
 
 ---
 
-**📮📮📮 I am very sorry, due to limited personal energy, this project will no longer be maintained. However, if anyone improves the code, feel free to submit a Pull Request, and I will find time to merge it into the main branch.**
+## 🔢 Neo Versioning
+
+Neo uses semantic versioning:
+
+- `X` = Major updates (breaking changes or major architecture shifts)
+- `Y` = Minor updates (new features and UX improvements)
+- `Z` = Bug fixes, regressions, and stability patches
+
+---
+
+## 🆕 What's New — v0.1.1
+
+> **UX Improvement Batch** — three upstream issues fixed: runtime crash on extra networks load, inconsistent weight display format, and residual space after LoRA tokens.
+
+- **🐛 Extra networks crash fix** — `get_extra_networks` was iterating `ui_extra_networks.extra_pages` directly; in Forge Neo other threads can modify it concurrently, causing `RuntimeError: dictionary changed size during iteration`; now takes a `list()` snapshot before iterating ⭐
+- **🔢 Consistent weight format** — new `formatWeight()` helper always renders integer weights with one decimal place (e.g. `1` → `1.0`, `1.1` stays `1.1`); prevents the weight input field from shifting width when toggling through values like `1.9 → 2.0 → 2.1` ⭐
+- **🔇 No residual space after LoRA** — `autoRemoveLoraBeforeComma` and `autoRemoveLoraAfterComma` now always set `splitSymbol = ''`; previously they set `' '` when `autoRemoveSpace` was off, leaving a stray space after every LoRA token ⭐
+
+---
+
+## 📖 Release Story
+
+### v0.1.1
+> **Theme: UX Improvement Batch** — three community-reported issues from the upstream physton repo fixed.
+
+- [x] `get_extra_networks.py`: wrap `ui_extra_networks.extra_pages` with `list()` to take a snapshot before iterating — prevents `RuntimeError: dictionary changed size during iteration` (#250)
+- [x] `common.js`: add `formatWeight(n)` — `Number.isInteger(n) ? n.toFixed(1) : String(n)` — ensures integer weights always emit at least one decimal digit (#341)
+- [x] `phystonPrompt.vue` / `tagMixin.js`: replace all `':' + tag.weightNum` with `':' + common.formatWeight(tag.weightNum)` so the new format is applied consistently everywhere a weight is embedded in a tag string
+- [x] `phystonPrompt.vue`: `autoRemoveLoraBeforeComma` branch: `splitSymbol = (this.autoRemoveSpace ? '' : ' ')` → `splitSymbol = ''` — always removes the separator before a LoRA token, regardless of the global space setting (#294)
+- [x] `phystonPrompt.vue`: `autoRemoveLoraAfterComma` branch: same fix as above for the trailing-separator case (#294)
+
+### v0.1.0
+> **Theme: Forge Neo Baseline** — critical compatibility fixes to make the extension load and run on Forge Neo.
+
+- [x] `get_token_counter.py`: removed `from modules.sd_hijack import model_hijack` — `modules/sd_hijack.py` was deleted in Forge Neo; replaced with `sd_models.model_data.sd_model.get_prompt_lengths_on_ui(prompt)` which is the API Forge Neo exposes for token counting
+- [x] `get_token_counter.py`: removed `from modules_forge import forge_version` and the forge/non-forge branching — unified to a single try/except pattern that works on all platforms
+- [x] `on_app_started.py`: `cmd_opts.data_dir` was removed from Forge Neo's `cmd_args.py`; replaced with `getattr(cmd_opts, 'data_dir', None)` to fail gracefully on Neo while keeping backwards compatibility with older forks
+- [x] `.gitignore`: added `.specstory/` to prevent IDE session files from being committed
+
+---
+
+## 🗺️ Roadmap
+
+### v0.1.0 — Forge Neo Baseline *(complete)*
+- Remove `modules.sd_hijack` dependency ✅
+- Safe `cmd_opts.data_dir` fallback ✅
+
+### v0.1.1 — UX Improvement Batch *(complete)*
+- Dictionary iteration crash fix (#250) ✅
+- Consistent weight decimal format (#341) ✅
+- Residual space after LoRA tokens (#294) ✅
+
+### v0.2.0 — UX Improvements II *(planned)*
+- Debounce on initialization to reduce UI lag on load (#328/#289)
+- LoRA tag blinking fix when filename ≠ metadata alias (#269)
+- Export / import favorites list (#330)
+- Visual BREAK / AND separator in the tag area (#278)
+
+### v1.0.0 — First Stable Release *(planned)*
+- All known regressions resolved
+- Full Forge Neo compatibility guarantee
+
+---
+
+## 🎯 Features
+
+> ⭐ = added or fixed in this Neo fork · everything else is original work by [Physton](https://github.com/Physton)
+
+### ✏️ Prompt Editing
+
+- **Intuitive tag interface** — displays prompt tokens as individual styled chips with bilingual (source ↔ translated) comparison
+- **Drag to reorder** — rearrange tags by dragging without retyping
+- **One-click weight adjustment** — increase or decrease tag weight with `(` `)` brackets; configurable step size
+- **Consistent weight format** — integer weights always display with one decimal place (e.g. `1.0`), preventing input-field layout shifts ⭐
+- **NovelAI symbol mode** — switch between `()` and `{}` weight notation
+- **Disable/enable tags** without deleting them
+- **One-click delete** per tag or via batch box-select
+- **BREAK / AND keyword support** — special tokens render correctly in the tag list
+
+### 🔤 Translation
+
+- **Auto-translate** — translates prompt/negative prompt automatically as you type
+- **Batch translation** — translate all tags at once with one click
+- **Dozens of translation services** — Google, Baidu, DeepL, Microsoft, OpenAI, Alibaba, Tencent, Yandex, and many more
+- **API key optional** — most free services work without registration
+- **Offline translation** — mBART-50 model supported for air-gapped environments
+- **Translation history** — per-tag translated value stored and shown inline
+
+### 🗂️ History & Favorites
+
+- **Automatic history** — every prompt change is recorded
+- **Favorites** — bookmark individual tags or entire prompts; one-click restore
+- **Batch favorite** — box-select multiple tags and favorite them all at once
+
+### 🔍 Extra Networks
+
+- **LoRA / LyCORIS / Textual Inversion detection** — recognized tokens are highlighted with distinct colors
+- **Existence check** — missing LoRA/embedding names are flagged visually
+- **Popup info panel** — hover a LoRA tag to see its metadata, preview image, and trained keywords
+- **No residual space after LoRA tokens** ⭐
+- **Fixed extra-networks crash on concurrent load** ⭐
+
+### 🤖 ChatGPT Integration
+
+- **Generate prompts with ChatGPT** — describe your scene in plain language and get a prompt back
+- **Configurable model and API key** — works with any OpenAI-compatible endpoint
+
+### ⚙️ Format & Settings
+
+- **Prompt format options** — comma spacing, trailing comma removal, LoRA separator behavior, newline handling
+- **Blacklist** — tags that are automatically filtered out
+- **Hotkeys** — configurable keyboard shortcuts per action
+- **Custom themes** — override CSS via built-in extension system
+- **Token counter** — live token count and max-length indicator using Forge Neo's native `get_prompt_lengths_on_ui` API ⭐
+
+---
+
+## 🎬 Demo
+
+*All demos below are from the original [physton/sd-webui-prompt-all-in-one](https://github.com/Physton/sd-webui-prompt-all-in-one) — full credit to [Physton](https://github.com/Physton).*
+
+- **Switch language**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.switch_language.gif)
+
+- **Translation API settings**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.translate_setting.gif)
+
+- **Show/Hide panel**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.fold.gif)
+
+- **Automatic translation**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.auto_translate.gif)
+
+- **One-click translation**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.translate.gif)
+
+- **Elegant input**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.elegant_input.gif)
+
+- **Quick weight adjustment**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.quick_adjust.gif)
+
+- **Favorite and History**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.history_favorite.gif)
+
+- **Use ChatGPT to generate prompts**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.chatgpt.gif)
+
+- **LoRA / LyCORIS / Textual Inversion highlighting**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.keyword_detection.gif)
+
+- **Prompt format options**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.prompt_format.gif)
+
+- **Batch operations**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.batch_operation.gif)
+
+- **Custom theme / extension styles**
+
+  ![](https://s1.imagehub.cc/images/2023/06/06/demo.custom_theme.gif)
+
+- **One-click keyword addition**
+
+  ![](https://s1.imagehub.cc/images/2023/08/15/demo.group_tags.gif)
+
+---
+
+## 📦 Installation
+
+### For Forge Neo
+
+1. Open Forge Neo WebUI
+2. Navigate to **Extensions** → **Install from URL**
+3. Paste: `https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo`
+4. Click **Install** and reload WebUI
+
+### Requirements
+
+- ✅ [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo)
+- ✅ Python 3.10+
+
+> ⚠️ **Not using Forge Neo?** Use the [original physton extension](https://github.com/Physton/sd-webui-prompt-all-in-one) instead. This fork will not work correctly on Automatic1111 or Forge Classic.
+
+---
+
+## 🌐 Language Support
+
+The UI itself is available in 12 languages:
+
+<details>
+<summary>UI Supported languages</summary>
+
+`简体中文` `繁體中文` `English` `Русский` `日本語` `한국어` `Français` `Deutsch` `Español` `Português` `Italiano` `العربية`
+
+</details>
+
+Translation supports 100+ languages:
+
+<details>
+<summary>Translation Supported languages</summary>
+
+`简体中文 (中国)` `繁體中文 (中國香港)` `繁体中文 (中國台灣)` `English (US)` `Afrikaans (South Africa)` `Shqip (Shqipëria)` `አማርኛ (ኢትዮጵያ)` `العربية (السعودية)` `Հայերեն (Հայաստան)` `অসমীয়া (ভাৰত)` `Azərbaycan dili (Latın, Azərbaycan)` `বাংলা (বাংলাদেশ)` `Башҡорт (Россия)` `Euskara (Espainia)` `Bosanski (Latinski, Bosna i Hercegovina)` `Български (България)` `Català (Espanya)` `Hrvatski (Hrvatska)` `Čeština (Česká republika)` `Dansk (Danmark)` `Nederlands (Nederland)` `Eesti (Eesti)` `Filipino (Pilipinas)` `Suomi (Suomi)` `Français (France)` `Français (Canada)` `Galego (España)` `ქართული (საქართველო)` `Deutsch (Deutschland)` `Ελληνικά (Ελλάδα)` `ગુજરાતી (ભારત)` `עברית (ישראל)` `हिन्दी (भारत)` `Magyar (Magyarország)` `Bahasa Indonesia (Indonesia)` `Gaeilge (Éire)` `Italiano (Italia)` `日本語 (日本)` `ಕನ್ನಡ (ಭಾರತ)` `Қазақ (Қазақстан)` `ភាសាខ្មែរ (កម្ពុជា)` `한국어 (대한민국)` `Кыргызча (Кыргызстан)` `ລາວ (ລາວ)` `Latviešu (Latvija)` `Lietuvių (Lietuva)` `Македонски (Северна Македонија)` `Bahasa Melayu (Latin, Malaysia)` `മലയാളം (ഇന്ത്യ)` `Malti (Malta)` `Māori (Aotearoa)` `मराठी (भारत)` `Монгол (Кирилл, Монгол улс)` `မြန်မာ (မြန်မာ)` `नेपाली (नेपाल)` `Norsk bokmål (Norge)` `فارسی (ایران)` `Polski (Polska)` `Português (Brasil)` `Português (Portugal)` `Română (România)` `Русский (Россия)` `Српски (ћирилица, Србија)` `Slovenčina (Slovensko)` `Slovenščina (Slovenija)` `Soomaali (Soomaaliya)` `Español (España)` `Kiswahili (Kenya)` `Svenska (Sverige)` `தமிழ் (இந்தியா)` `తెలుగు (భారత)` `ไทย (ไทย)` `Türkçe (Türkiye)` `Українська (Україна)` `اردو (پاکستان)` `O'zbekcha (Lotin, O'zbekiston)` `Tiếng Việt (Việt Nam)` `Cymraeg (Y Deyrnas Unedig)` `isiZulu (iNingizimu Afrika)` and more…
+
+</details>
+
+---
+
+## 🌐 Translation APIs
+
+### No API Key Required
+
+Free to use, but may be rate-limited or unstable. If translation fails, switch to another service.
+
+### API Key Required
+
+Most have a free tier — register and obtain a key:
+
+| Service | Free Tier |
+|---|---|
+| DeepL | ✅ |
+| Microsoft Translator | ✅ |
+| OpenAI | ❌ |
+| Baidu | ✅ |
+| Alibaba | ✅ |
+| Tencent | ✅ |
+| Yandex | ✅ |
+| Caiyun | ✅ |
+| Niutrans | ✅ |
+| iFlytek | ✅ |
+| Volcengine | ✅ |
+| Amazon Translate | ✅ |
+
+### Offline
+
+- **mBART-50** — downloads a local model on first use (~1.5 GB); works without internet access after download
+
+---
+
+## 📄 Credits
+
+### Original Project — all core functionality
+
+> This fork would not exist without the extensive work of [Physton](https://github.com/Physton). Every feature in this extension was originally designed, built, and maintained by him. Please consider giving a ⭐ to the original repository.
+
+**[sd-webui-prompt-all-in-one](https://github.com/Physton/sd-webui-prompt-all-in-one)** by **[Physton](https://github.com/Physton)**
+
+- Intuitive tag-based prompt interface
+- Auto-translate and batch translation with 100+ languages
+- History, favorites, blacklist, hotkeys
+- ChatGPT integration
+- LoRA / LyCORIS / embedding detection and metadata popup
+- Custom themes and extension system
+- Full multilingual UI (12 languages)
+
+### Neo Fork — Forge Neo compatibility + upstream fixes
+
+**[sd-webui-prompt-all-in-one-neo](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo)** by **[Eduardo Abreu](https://github.com/eduardoabreu81)**
+
+- Forge Neo compatibility: removed `modules.sd_hijack` dependency, token counter via `get_prompt_lengths_on_ui`
+- Safe `cmd_opts.data_dir` fallback for Forge Neo's modified arg set
+- UX fixes from upstream community issues: #250, #294, #341
+
+### Special Thanks
+
+- **[Forge Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo)** by [Haoming02](https://github.com/Haoming02)
+- All contributors who reported and diagnosed upstream issues
+
+---
+
+## 📜 License
+
+MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome:
+- 🐛 Report bugs
+- 💡 Suggest new features
+- 🔧 Submit pull requests
+- 📖 Improve documentation
 
 ---
 
 <div align="center">
 
-### Installation tutorial, detailed feature introduction, usage instructions, frequently asked questions, and more can be found in the [Wiki](https://aiodoc.physton.com/).
+Made with ❤️ for the Stable Diffusion community
+
+**[Report Bug](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Request Feature](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)**
+
+Original extension by **[Physton](https://github.com/Physton/sd-webui-prompt-all-in-one)** — please ⭐ the original repo if you find this useful.
 
 </div>
-
-----
-
-**📢📢📢 This project has developed an independent standalone version that can run without relying on stable-diffusion-webui. It is lightweight and compact, focusing on editing and organizing prompt words. Visit [Physton/sd-webui-prompt-all-in-one-app](https://github.com/Physton/sd-webui-prompt-all-in-one-app) for the tutorial on how to use it.**
-
-----
-
-> If you find this extension helpful, please give me a star on Github!
-> You could also buy me a coffee: [donate](#donate)
-
-----
-
-## Translation API Description
-
-1. `API Key Not Required`: They are highly unstable and not every API can be used on your computer. If the translation fails, please try switching to another API. ⚠️⚠️⚠️ **Do not submit an issue!**
-2. `API KEY Required`: You need to apply for an API KEY on your own. The application methods for different interfaces will appear after switching to the corresponding interface. ⚠️⚠️⚠️ **Most of them are `free`!**
-3. `Offline Translation`: During initialization, automatic download of language models is required. If your network environment is poor, it may not be able to complete the automatic download and initialization.
-
-## [Wiki](https://aiodoc.physton.com/)
-
-- [Installation](https://aiodoc.physton.com/Installation.html)
-- [Extension update description](https://aiodoc.physton.com/ExtensionUpdateDescription.html)
-- [Translation API Description](https://aiodoc.physton.com/TranslationApiConfiguration.html#translation-api-description)
-- [Contributing](https://aiodoc.physton.com/Contributing.html)
-- [Custom Theme](https://aiodoc.physton.com/Contributing.html#custom-theme)
-- [FAQ](https://aiodoc.physton.com/FAQ.html)
-- [Buy me a coffee](#buy-me-a-coffee)
-
-## Language support
-
-Translation supports almost all national languages, but the UI interface of most countries will be displayed in English. If you need localized language display, you can translate and submit a PR.
-
-<details>
-<summary>UI Supported languages</summary>
-
-`简体中文` `繁體中文` `English` ` Русский` `日本語` `한국어` ` Français` `Deutsch` ` Español` `Português` `Italiano` `العربية`
-</details>
-
-<details>
-<summary>Translation Supported languages</summary>
-
-`简体中文 (中国)` `繁體中文 (中國香港)` `繁体中文 (中國台灣)` `English (US)` `Afrikaans (South Africa)` `Shqip (Shqipëria)` `አማርኛ (ኢትዮጵያ)` `العربية (السعودية)` `Հայերեն (Հայաստան)` `অসমীয়া (ভাৰত)` `Azərbaycan dili (Latın, Azərbaycan)` `বাংলা (বাংলাদেশ)` `Башҡорт (Россия)` `Euskara (Espainia)` `Bosanski (Latinski, Bosna i Hercegovina)` `Български (България)` `Català (Espanya)` `Hrvatski (Hrvatska)` `Čeština (Česká republika)` `Dansk (Danmark)` `درى (افغانستان)` `ދިވެހިބަސް (ދިވެހިރާއްޖެ)` `Nederlands (Nederland)` `Eesti (Eesti)` `Føroyskt (Føroyar)` `vosa Vakaviti (Viti)` `Filipino (Pilipinas)` `Suomi (Suomi)` `Français (France)` `Français (Canada)` `Galego (España)` `ქართული (საქართველო)` `Deutsch (Deutschland)` `Ελληνικά (Ελλάδα)` `ગુજરાતી (ભારત)` `Kreyòl ayisyen (Ayiti)` `עברית (ישראל)` `हिन्दी (भारत)` `Hmong Daw (Latn, United States)` `Magyar (Magyarország)` `Íslenska (Ísland)` `Bahasa Indonesia (Indonesia)` `Inuktitut (Kanatami)` `Inuktitut (Latin, Canada)` `ᐃᓄᒃᑎᑐᑦ (ᑲᓇᑕᒥ)` `Gaeilge (Éire)` `Italiano (Italia)` `日本語 (日本)` `ಕನ್ನಡ (ಭಾರತ)` `Қазақ (Қазақстан)` `ភាសាខ្មែរ (កម្ពុជា)` `Klingon (Latn)` `Klingon (plqaD)` `한국어 (대한민국)` `کوردی (عێراق)` `Kurmancî (Latînî, Tirkiye)` `Кыргызча (Кыргызстан)` `ລາວ (ລາວ)` `Latviešu (Latvija)` `Lietuvių (Lietuva)` `Македонски (Северна Македонија)` `Malagasy (Madagasikara)` `Bahasa Melayu (Latin, Malaysia)` `മലയാളം (ഇന്ത്യ)` `Malti (Malta)` `Māori (Aotearoa)` `मराठी (भारत)` `Монгол (Кирилл, Монгол улс)` `ᠮᠣᠩᠭᠣᠯ ᠤᠯᠤᠰ (ᠨᠢᠭᠡᠳᠦᠯ ᠤᠨᠤᠭ᠎ᠠ)` `မြန်မာ (မြန်မာ)` `नेपाली (नेपाल)` `Norsk bokmål (Norge)` `ଓଡ଼ିଆ (ଭାରତ)` `پښتو (افغانستان)` `فارسی (ایران)` `Polski (Polska)` `Português (Brasil)` `Português (Portugal)` `ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ, ਭਾਰਤ)` `Querétaro Otomi (Latn, México)` `Română (România)` `Русский (Россия)` `Samoan (Latn, Samoa)` `Српски (ћирилица, Србија)` `Srpski (latinica, Srbija)` `Slovenčina (Slovensko)` `Slovenščina (Slovenija)` `Soomaali (Soomaaliya)` `Español (España)` `Kiswahili (Kenya)` `Svenska (Sverige)` `Reo Tahiti (Polynésie française)` `தமிழ் (இந்தியா)` `Татарча (латин, Россия)` `తెలుగు (భారత)` `ไทย (ไทย)` `བོད་ཡིག (རྒྱ་གར།)` `ትግርኛ (ኢትዮጵያ)` `lea fakatonga (Tonga)` `Türkçe (Türkiye)` `Українська (Україна)` `اردو (پاکستان)` `ئۇيغۇرچە (ئۇيغۇرچە، جۇڭگو)` `O'zbekcha (Lotin, O'zbekiston)` `Tiếng Việt (Việt Nam)` `Cymraeg (Y Deyrnas Unedig)` `Yucatec Maya (México)` `isiZulu (iNingizimu Afrika)`
-</details>
-
-## Features
-
-- `Intuitive input interface` provides a more intuitive and powerful input interface, displaying bilingual prompt word comparisons for easy understanding.
-- `Automatic translation` automatically translates prompt words/reverse prompt words, supporting multiple languages.
-- `Dozens of translation services` with dozens of online translations and offline translation models.
-- `Multilingual support` supports translation for most languages spoken in the world, allowing you to input prompt words in any language.
-- `History records` automatically records when prompt words/reverse prompt words change.
-- `Favorites` allows you to quickly bookmark and batch bookmark your favorite prompt words/reverse prompt words.
-- `Quick adjustments` drag and adjust the position of prompt words, one-click increase or decrease the weight of prompt words, one-click delete, disable, translate, or bookmark, and more.
-- `Batch operations` select multiple prompt words/reverse prompt words in a box, one-click delete, translate, or bookmark, and more.
-- `ChatGPT` generates prompt words intelligently through ChatGPT.
-- `Prompt word blacklist` allows you to set a blacklist to automatically filter prompt words.
-- `One-click adding of prompt words` thousands of prompt words available, just a click away.
-- `Keyword highlighting` Lora, LyCORIS, Textual Inversion highlighting and detection.
-- `Customizable keyword colors` different types of keywords can be displayed in different custom colors.
-- `Custom themes` customize themes and extend styles.
-- `...` More features waiting for you to discover.
-
-## Demo
-
-- [Switch language](https://aiodoc.physton.com/LanguageSelection.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.switch_language.gif)
-
-- [Translation API settings](https://aiodoc.physton.com/TranslationApiConfiguration.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.translate_setting.gif)
-
-- [Show/Hide content](https://aiodoc.physton.com/OtherFeatures.html#show-collapse-the-extension-panel)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.fold.gif)
-
-- [Show/Hide the WebUI input box](https://aiodoc.physton.com/OtherFeatures.html#show-hide-the-webui-input-box)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.show_input.gif)
-
-- [Automatic translation](https://aiodoc.physton.com/AutomaticTranslation.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.auto_translate.gif)
-
-- [One-click translation](https://aiodoc.physton.com/BatchTranslation.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.translate.gif)
-
-- [Elegant input](https://aiodoc.physton.com/KeywordInputBox.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.elegant_input.gif)
-
-- [Quick adjustment](https://aiodoc.physton.com/ListOfKeywords.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.quick_adjust.gif)
-
-- [Favorite and History](https://aiodoc.physton.com/History.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.history_favorite.gif)
-
-- [Use ChatGPT to Generate Prompts](https://aiodoc.physton.com/UsingChatgptToGeneratePrompts.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.chatgpt.gif)
-
-- [Writing in WebUI input box](https://aiodoc.physton.com/WritingInWebUIInputBox.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.writing_webui.gif)
-
-- Support for [a1111-sd-webui-tagcomplete](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.tagcomplete.gif)
-
-- [Highlighting and detection of Lora, LyCORIS, and Textual Inversion](https://aiodoc.physton.com/ListOfKeywords.html#highlight-keyword)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.keyword_detection.gif)
-
-- [Format of Prompt](https://aiodoc.physton.com/FormatOfPrompts.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.prompt_format.gif)
-
-- [Batch operation](https://aiodoc.physton.com/BatchTranslation.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.batch_operation.gif)
-
-- [Custom Theme / Extension styles](https://aiodoc.physton.com/ThemeStyle.html)
-
-  ![](https://s1.imagehub.cc/images/2023/06/06/demo.custom_theme.gif)
-
-- [One-Click Keyword Addition](https://aiodoc.physton.com/GroupTags.html)
-
-  ![](https://s1.imagehub.cc/images/2023/08/15/demo.group_tags.gif)
-
-## Donate
-
-[Donation list](https://aiodoc.physton.com/Donate.html)
-
-### Buy me a coffee
-
-| ko-fi (EN) | [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/physton) |
-|:-----------:| :----: |
-| Paypal (EN) | [https://paypal.me/physton](https://paypal.me/physton) |
-| 爱发电 (CN) | [https://afdian.net/a/physton/thank](https://afdian.net/a/physton/thank) |
-| 支付宝 (CN) | ![](https://s1.imagehub.cc/images/2023/07/05/alipay.jpeg) |
-| 微信赞赏 (CN) | ![](https://s1.imagehub.cc/images/2023/07/05/wechat.jpeg) |
