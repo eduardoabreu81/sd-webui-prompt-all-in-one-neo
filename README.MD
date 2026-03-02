@@ -87,30 +87,24 @@ Neo uses semantic versioning:
 - Consistent weight decimal format (#341) ✅
 - Residual space after LoRA tokens (#294) ✅
 
-### v0.2.0 — UX Improvements II *(planned)*
+### v0.1.2 — Bug Fixes *(planned)*
 - Debounce on initialization to reduce UI lag on load (#328/#289)
 - LoRA tag blinking fix when filename ≠ metadata alias (#269)
-- Export / import favorites list (#330)
-- Visual BREAK / AND separator in the tag area (#278)
 
-### v0.3.0 — Quality Presets *(in progress)*
-User-defined per-checkpoint quality tag presets with CivitAI integration.
+### v0.2.0 — Quality Presets + Settings Foundation *(in progress)*
+User-defined per-checkpoint quality tag presets with CivitAI integration, plus the first settings migrated into **Forge Settings → Prompt All-in-One Neo**.
 - **Templates tab**: built-in quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) with per-family enable/disable checkbox and editable tag overrides
 - **Checkpoints tab**: lists all installed checkpoints; per-row Detect button queries CivitAI by SHA-256 hash to identify the base model family; Scan All for batch detection — results cached locally
 - **Custom tab**: user-defined presets matched by filename substring with auto-insert mode
-- CivitAI API key stored in **Forge Settings → Prompt All-in-One Neo** (not in the visible panel)
+- CivitAI API key in **Forge Settings → Prompt All-in-One Neo** — first step of settings migration
 - Detection chain: exact filename match → CivitAI SHA-256 lookup → filename substring → built-in template
 - Positive and negative tags configured independently; embeddings supported
 - Pending: auto-inject on checkpoint load; duplicate-safe insertion; `modelspec.trigger_phrase` pre-population
+- Pending settings migration: API keys for translation engines, default language, default translate service, auto-translate and auto-format defaults
 
-### v0.4.0 — Settings Migration *(planned)*
-Move persistent, non-immediate-effect settings from the frontend panel into **Forge Settings → Prompt All-in-One Neo** using `script_callbacks.on_ui_settings` + `shared.opts`, consistent with how Forge extensions manage configuration.
-- API keys (Baidu, DeepL, Microsoft, OpenAI, etc.) — sensitive data out of the visible panel
-- Default translation service
-- Default UI language
-- Weight step size
-- Auto-translate on type (default on/off)
-- Auto-remove space (default on/off)
+### v0.3.0 — UX Features *(planned)*
+- Export / import favorites list (#330)
+- Visual BREAK / AND separator in the tag area (#278)
 
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved
