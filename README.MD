@@ -93,17 +93,15 @@ Neo uses semantic versioning:
 - Export / import favorites list (#330)
 - Visual BREAK / AND separator in the tag area (#278)
 
-### v0.3.0 — Quality Presets *(planned)*
-User-defined per-checkpoint quality tag presets, auto-injected at the start of the prompt.
-- Register presets manually in a new "Quality Presets" panel; name matched against active checkpoint filename via case-insensitive substring (e.g. `"pony"` matches all Pony family models)
-- When a checkpoint is loaded and a matching preset exists, its tags are injected at **position 0** of both positive and negative prompts
-- **Auto-insert mode**: tags injected automatically on every generation without user interaction
-- **Suggested mode**: a non-intrusive banner appears offering one-click insertion — user can accept or dismiss
-- Positive and negative tags are configured independently per preset
-- Embeddings (e.g. `<embedding:EasyNegative>`) can be included in the preset alongside plain tags
-- Duplicate-safe: if preset tags are already at the start of the prompt, no re-injection occurs
-- Reads `modelspec.trigger_phrase` and `modelspec.title` from `.safetensors` metadata when available to pre-populate the form; falls back to filename when metadata is absent
-- Stored in `storage/quality_presets.json`
+### v0.3.0 — Quality Presets *(in progress)*
+User-defined per-checkpoint quality tag presets with CivitAI integration.
+- **Templates tab**: built-in quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) with per-family enable/disable checkbox and editable tag overrides
+- **Checkpoints tab**: lists all installed checkpoints; per-row Detect button queries CivitAI by SHA-256 hash to identify the base model family; Scan All for batch detection — results cached locally
+- **Custom tab**: user-defined presets matched by filename substring with auto-insert mode
+- CivitAI API key stored in **Forge Settings → Prompt All-in-One Neo** (not in the visible panel)
+- Detection chain: exact filename match → CivitAI SHA-256 lookup → filename substring → built-in template
+- Positive and negative tags configured independently; embeddings supported
+- Pending: auto-inject on checkpoint load; duplicate-safe insertion; `modelspec.trigger_phrase` pre-population
 
 ### v0.4.0 — Settings Migration *(planned)*
 Move persistent, non-immediate-effect settings from the frontend panel into **Forge Settings → Prompt All-in-One Neo** using `script_callbacks.on_ui_settings` + `shared.opts`, consistent with how Forge extensions manage configuration.
@@ -118,6 +116,12 @@ Move persistent, non-immediate-effect settings from the frontend panel into **Fo
 - All known regressions resolved
 - Quality Presets and Settings migration complete
 - Full Forge Neo compatibility guarantee
+
+### vNext — Codebase Refactor *(planned)*
+- Rename internal Python package `scripts/physton_prompt/` → `scripts/paio_neo/` and update all imports
+- Rename API route prefix `/physton_prompt/` → `/paio_neo/` across `on_app_started.py` and `gradioAPI.js`
+- Update `localStorage` keys from `phystonPrompt*` to `paioNeo*`
+- CSS class rename (`physton-prompt` → `paio-neo`) is low priority — no functional impact
 
 ---
 
