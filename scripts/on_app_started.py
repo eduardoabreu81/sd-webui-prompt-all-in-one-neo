@@ -25,10 +25,12 @@ from scripts.physton_prompt.get_group_tags import get_group_tags
 try:
     from modules.shared import cmd_opts
 
-    if cmd_opts.data_dir:
+    # --data-dir was removed in forge-neo; getattr avoids AttributeError while keeping backwards compatibility
+    _data_dir = getattr(cmd_opts, 'data_dir', None)
+    if _data_dir:
         extension_dir = os.path.dirname(os.path.abspath(__file__)) + '/../'
         extension_dir = os.path.normpath(extension_dir) + os.path.sep
-        data_dir = os.path.normpath(cmd_opts.data_dir) + os.path.sep
+        data_dir = os.path.normpath(_data_dir) + os.path.sep
         webui_dir = os.path.normpath(Path().absolute()) + os.path.sep
         if not extension_dir.startswith(webui_dir):
             find = False

@@ -5,3 +5,4 @@
 /src/package-lock.json
 /styles/extensions/demo
 __pycache__
+.specstory/
