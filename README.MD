@@ -93,8 +93,30 @@ Neo uses semantic versioning:
 - Export / import favorites list (#330)
 - Visual BREAK / AND separator in the tag area (#278)
 
+### v0.3.0 — Quality Presets *(planned)*
+User-defined per-checkpoint quality tag presets, auto-injected at the start of the prompt.
+- Register presets manually in a new "Quality Presets" panel; name matched against active checkpoint filename via case-insensitive substring (e.g. `"pony"` matches all Pony family models)
+- When a checkpoint is loaded and a matching preset exists, its tags are injected at **position 0** of both positive and negative prompts
+- **Auto-insert mode**: tags injected automatically on every generation without user interaction
+- **Suggested mode**: a non-intrusive banner appears offering one-click insertion — user can accept or dismiss
+- Positive and negative tags are configured independently per preset
+- Embeddings (e.g. `<embedding:EasyNegative>`) can be included in the preset alongside plain tags
+- Duplicate-safe: if preset tags are already at the start of the prompt, no re-injection occurs
+- Reads `modelspec.trigger_phrase` and `modelspec.title` from `.safetensors` metadata when available to pre-populate the form; falls back to filename when metadata is absent
+- Stored in `storage/quality_presets.json`
+
+### v0.4.0 — Settings Migration *(planned)*
+Move persistent, non-immediate-effect settings from the frontend panel into **Forge Settings → Prompt All-in-One Neo** using `script_callbacks.on_ui_settings` + `shared.opts`, consistent with how Forge extensions manage configuration.
+- API keys (Baidu, DeepL, Microsoft, OpenAI, etc.) — sensitive data out of the visible panel
+- Default translation service
+- Default UI language
+- Weight step size
+- Auto-translate on type (default on/off)
+- Auto-remove space (default on/off)
+
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved
+- Quality Presets and Settings migration complete
 - Full Forge Neo compatibility guarantee
 
 ---
