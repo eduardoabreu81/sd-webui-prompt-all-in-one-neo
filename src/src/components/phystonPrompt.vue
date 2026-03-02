@@ -842,23 +842,31 @@ export default {
     methods: {
         init() {
             this.tags = []
-            this.onTextareaChange()
+            // Delay the first parse and polling start by 300ms so that Forge /
+            // A1111 has time to restore the session textarea value before we
+            // baseline on it.  Without this delay the extension would parse the
+            // textarea while it is still empty, then immediately re-parse once
+            // the session state is restored, causing a double-render on startup
+            // (issues #328 / #289).
+            setTimeout(() => {
+                this.onTextareaChange()
 
-            let oldValue = this.textarea.value
-            setInterval(() => {
-                if (this.autoLoadWebuiPrompt) {
-                    let newValue = this.textarea.value
-                    if (oldValue === newValue) return
-                    // 如果焦点在 textarea 上，就不要触发 onTextareaChange 了
-                    if (document.activeElement === this.textarea) return
-                    oldValue = newValue
-                    this.onTextareaChange(true)
-                }
-            }, 500)
-            // this.textarea.removeEventListener('change', this.onTextareaChange)
-            // this.textarea.addEventListener('change', this.onTextareaChange)
-            // this.textarea.removeEventListener('blur', this.onTextareaChange)
-            // this.textarea.addEventListener('blur', this.onTextareaChange)
+                let oldValue = this.textarea.value
+                setInterval(() => {
+                    if (this.autoLoadWebuiPrompt) {
+                        let newValue = this.textarea.value
+                        if (oldValue === newValue) return
+                        // 如果焦点在 textarea 上，就不要触发 onTextareaChange 了
+                        if (document.activeElement === this.textarea) return
+                        oldValue = newValue
+                        this.onTextareaChange(true)
+                    }
+                }, 500)
+                // this.textarea.removeEventListener('change', this.onTextareaChange)
+                // this.textarea.addEventListener('change', this.onTextareaChange)
+                // this.textarea.removeEventListener('blur', this.onTextareaChange)
+                // this.textarea.addEventListener('blur', this.onTextareaChange)
+            }, 300)
         },
         onTextareaChange(event) {
             if (this.onTextareaChangeTimeId) clearTimeout(this.onTextareaChangeTimeId)

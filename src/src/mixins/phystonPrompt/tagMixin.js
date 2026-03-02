@@ -122,12 +122,15 @@ export default {
             let classes = ['prompt-tag-value']
             if (tag.isLora) {
                 classes.push('lora-tag')
-                if (!tag.loraExists) {
+                // Only mark as not-exists after the loras list has been loaded.
+                // While loras is still the initial empty array, skip the indicator
+                // to prevent a false-negative flash on startup (#269).
+                if (!tag.loraExists && !Array.isArray(this.loras)) {
                     classes.push('lora-not-exists')
                 }
             } else if (tag.isLyco) {
                 classes.push('lyco-tag')
-                if (!tag.lycoExists) {
+                if (!tag.lycoExists && !Array.isArray(this.lycos)) {
                     classes.push('lyco-not-exists')
                 }
             } else if (tag.isEmbedding) {
