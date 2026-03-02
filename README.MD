@@ -23,10 +23,11 @@
 ## 📋 Table of Contents
 
 - [Neo Versioning](#-neo-versioning)
-- [What's New](#-whats-new--v011)
+- [What's New](#-whats-new--v020)
 - [Release Story](#-release-story)
 - [Roadmap](#️-roadmap)
 - [Features](#-features)
+  - [Quality Presets](#-quality-presets-)
 - [Demo](#-demo)
 - [Installation](#-installation)
 - [Language Support](#-language-support)
@@ -45,17 +46,41 @@ Neo uses semantic versioning:
 
 ---
 
-## 🆕 What's New — v0.1.1
+## 🆕 What's New — v0.2.0
 
-> **UX Improvement Batch** — three upstream issues fixed: runtime crash on extra networks load, inconsistent weight display format, and residual space after LoRA tokens.
+> **Quality Presets + Settings Foundation** — per-checkpoint quality tag presets with CivitAI auto-detection, auto-injection on model switch, and the first settings migrated into Forge's native Settings panel.
 
-- **🐛 Extra networks crash fix** — `get_extra_networks` was iterating `ui_extra_networks.extra_pages` directly; in Forge Neo other threads can modify it concurrently, causing `RuntimeError: dictionary changed size during iteration`; now takes a `list()` snapshot before iterating ⭐
-- **🔢 Consistent weight format** — new `formatWeight()` helper always renders integer weights with one decimal place (e.g. `1` → `1.0`, `1.1` stays `1.1`); prevents the weight input field from shifting width when toggling through values like `1.9 → 2.0 → 2.1` ⭐
-- **🔇 No residual space after LoRA** — `autoRemoveLoraBeforeComma` and `autoRemoveLoraAfterComma` now always set `splitSymbol = ''`; previously they set `' '` when `autoRemoveSpace` was off, leaving a stray space after every LoRA token ⭐
+- **🎨 Quality Presets panel** — three-tab modal (Templates / Checkpoints / Custom) accessible via the ⭐ button on each prompt ⭐
+- **📋 Templates tab** — built-in quality tag templates for every major model family (Pony, NoobAI, Illustrious, SDXL 1.0/Turbo/Lightning, SD 1.5/2.1, Flux.1 D/S); each family independently enable/disable; editable positive + negative tag overrides per family ⭐
+- **🔍 Checkpoints tab** — lists all installed checkpoints; per-row **Detect** button queries CivitAI by SHA-256 hash to identify model family; **Scan All** for batch detection; results cached locally (never calls the API twice for the same file) ⭐
+- **📝 Custom tab** — user-defined presets matched by filename substring, with optional **auto-insert on model load** flag ⭐
+- **⚡ Auto-inject on checkpoint switch** — when you switch models mid-session, if the resolved preset has auto-insert enabled the quality tags are prepended to the active tab automatically ⭐
+- **🔒 CivitAI API key in Forge Settings** — moved from localStorage to **Settings → Prompt All-in-One Neo**; sensitive data no longer stored in browser storage ⭐
+- **🛡️ Duplicate-safe insertion** — `prependTags()` checks the current tag list before inserting; existing quality tags are never doubled ⭐
 
 ---
 
 ## 📖 Release Story
+
+### v0.2.0
+> **Theme: Quality Presets + Settings Foundation** — full Quality Presets system with CivitAI integration, auto-inject on model switch, and first step of settings migration.
+
+- [x] `get_quality_presets.py`: `BUILTIN_TEMPLATES` dict covering Pony, NoobAI, Illustrious, SDXL variants, SD 1.5/2.1, Flux.1 — tag choices sourced from official model pages
+- [x] `get_quality_presets.py`: `detect_preset_for_checkpoint()` — detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template
+- [x] `get_quality_presets.py`: `get_sha256_from_file()` — reads `modelspec.hash_sha256` from safetensors header, falls back to `.sha256` sidecar
+- [x] `get_quality_presets.py`: `fetch_base_model_from_civitai()` — browser-style `User-Agent` header to bypass Cloudflare error 1010
+- [x] `get_quality_presets.py`: `get_installed_checkpoints()` + `scan_checkpoint()` — list & per-file CivitAI scan with persistent `checkpoint_cache`
+- [x] `on_app_started.py`: 5 new REST endpoints (`get_quality_presets`, `save_quality_presets`, `get_builtin_templates`, `detect_model_preset`, `get_installed_checkpoints`, `scan_checkpoint`)
+- [x] `on_app_started.py`: `on_ui_settings()` — registers `paio_neo_civitai_api_key` (password field) in **Forge Settings → Prompt All-in-One Neo**
+- [x] `qualityPresets.vue`: 3-tab 710-line component — Templates (per-family toggle + edit), Checkpoints (scan + badge), Custom (add/delete presets)
+- [x] `App.vue`: `startCheckpointWatcher()` — polls `/detect_model_preset` every 3 s; injects tags when checkpoint path changes and `auto_insert === true`
+- [x] `phystonPrompt.vue` `prependTags()`: duplicate-safe — skips tags already present in the current list
+
+### v0.1.2
+> **Theme: Bug Fixes** — two long-standing initialization and visual glitches eliminated.
+
+- [x] `phystonPrompt.vue` `init()`: wrap body in `setTimeout(..., 300)` — gives Forge time to restore session textarea value before first parse; eliminates double-render flash on page load (#328/#289)
+- [x] `tagMixin.js` `_setTagClass()`: guard `lora-not-exists` / `lyco-not-exists` behind `!Array.isArray(this.loras)` — while the extra-networks API is loading, `loras` is `[]` (Array); the indicator is now suppressed until the dict is populated, eliminating the startup blink (#269)
 
 ### v0.1.1
 > **Theme: UX Improvement Batch** — three community-reported issues from the upstream physton repo fixed.
@@ -87,20 +112,20 @@ Neo uses semantic versioning:
 - Consistent weight decimal format (#341) ✅
 - Residual space after LoRA tokens (#294) ✅
 
-### v0.1.2 — Bug Fixes *(planned)*
-- Debounce on initialization to reduce UI lag on load (#328/#289)
-- LoRA tag blinking fix when filename ≠ metadata alias (#269)
+### v0.1.2 — Bug Fixes *(complete)*
+- Debounce on initialization to reduce UI lag on load (#328/#289) ✅
+- LoRA tag blinking fix when filename ≠ metadata alias (#269) ✅
 
-### v0.2.0 — Quality Presets + Settings Foundation *(in progress)*
+### v0.2.0 — Quality Presets + Settings Foundation *(complete)*
 User-defined per-checkpoint quality tag presets with CivitAI integration, plus the first settings migrated into **Forge Settings → Prompt All-in-One Neo**.
-- **Templates tab**: built-in quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) with per-family enable/disable checkbox and editable tag overrides
-- **Checkpoints tab**: lists all installed checkpoints; per-row Detect button queries CivitAI by SHA-256 hash to identify the base model family; Scan All for batch detection — results cached locally
-- **Custom tab**: user-defined presets matched by filename substring with auto-insert mode
-- CivitAI API key in **Forge Settings → Prompt All-in-One Neo** — first step of settings migration
-- Detection chain: exact filename match → CivitAI SHA-256 lookup → filename substring → built-in template
-- Positive and negative tags configured independently; embeddings supported
-- Pending: auto-inject on checkpoint load; duplicate-safe insertion; `modelspec.trigger_phrase` pre-population
-- Pending settings migration: API keys for translation engines, default language, default translate service, auto-translate and auto-format defaults
+- **Templates tab**: built-in quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) ✅
+- **Checkpoints tab**: scan via CivitAI SHA-256; per-row Detect and Scan All; results cached ✅
+- **Custom tab**: user-defined presets matched by filename substring with auto-insert flag ✅
+- **Auto-inject on model switch**: when checkpoint changes mid-session and auto-insert is enabled, tags are prepended automatically ✅
+- **Duplicate-safe insertion**: `prependTags()` skips tags already present in the prompt ✅
+- CivitAI API key in **Forge Settings → Prompt All-in-One Neo** ✅
+- Detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template ✅
+- Deferred to follow-up: `modelspec.trigger_phrase` pre-population; translation API keys settings migration
 
 ### v0.3.0 — UX Features *(planned)*
 - Export / import favorites list (#330)
@@ -161,6 +186,14 @@ User-defined per-checkpoint quality tag presets with CivitAI integration, plus t
 
 - **Generate prompts with ChatGPT** — describe your scene in plain language and get a prompt back
 - **Configurable model and API key** — works with any OpenAI-compatible endpoint
+
+### 🎯 Quality Presets ⭐
+
+- **Templates** — built-in quality tag sets per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1); each family independently toggleable; editable positive + negative overrides per family
+- **Checkpoint scanner** — identify any installed checkpoint's model family by querying CivitAI with its SHA-256 hash; results cached locally
+- **Custom presets** — define your own quality tags matched by filename substring; mark as **auto-insert** to have them injected whenever you switch to a matching model
+- **Auto-inject on model switch** — when a checkpoint change is detected mid-session and auto-insert is enabled, quality tags are prepended to the active tab automatically
+- **CivitAI API key** stored in **Forge Settings → Prompt All-in-One Neo** (not in browser storage)
 
 ### ⚙️ Format & Settings
 

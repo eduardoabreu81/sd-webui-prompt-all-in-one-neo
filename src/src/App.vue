@@ -368,7 +368,11 @@ export default {
                 dblClick: 'disable', // edit, disable, extend
                 rightClick: '', // edit, disable, extend
                 hover: 'extend', // extend
-            }
+            },
+
+            // Tracks the currently loaded checkpoint path so the auto-inject
+            // watcher can detect when the user switches models (#v0.2.0).
+            checkpointWatcherLastPath: '',
         }
     },
     watch: {
@@ -877,6 +881,7 @@ export default {
                     })
 
                     this.startWatchSave = true
+                    this.startCheckpointWatcher()
                 })
 
                 this.handlePaste()
@@ -1178,6 +1183,55 @@ export default {
         onShowAbout() {
             this.$refs.about.open()
         },
+        // ------------------------------------------------------------------
+        // Checkpoint auto-inject (v0.2.0)
+        // ------------------------------------------------------------------
+        /**
+         * Establish a baseline of the current checkpoint path, then poll
+         * every 3 s. When the path changes AND the resolved preset has
+         * auto_insert === true, prepend the quality tags into the active tab.
+         */
+        startCheckpointWatcher() {
+            this.gradioAPI.detectModelPreset().then(result => {
+                this.checkpointWatcherLastPath = result.checkpoint_path || ''
+                setInterval(() => {
+                    this.gradioAPI.detectModelPreset().then(result => {
+                        const newPath = result.checkpoint_path || ''
+                        if (!newPath || newPath === this.checkpointWatcherLastPath) return
+                        this.checkpointWatcherLastPath = newPath
+                        if (!result.auto_insert) return
+                        const pos = result.positive_prefix || []
+                        const neg = result.negative_prefix || []
+                        if (!pos.length && !neg.length) return
+                        this.autoInjectQualityTags(pos, neg)
+                    }).catch(() => {})
+                }, 3000)
+            }).catch(() => {})
+        },
+        /**
+         * Prepend quality tags into the currently visible tab's prompts.
+         * Active tab is resolved by checking offsetParent visibility.
+         * Falls back to txt2img if neither tab is detectable.
+         */
+        autoInjectQualityTags(pos, neg) {
+            let activeTabId = ''
+            for (const tabId of ['tab_txt2img', 'tab_img2img']) {
+                const el = common.gradioApp().querySelector('#' + tabId)
+                if (el && el.offsetParent !== null) {
+                    activeTabId = tabId
+                    break
+                }
+            }
+            if (!activeTabId) activeTabId = 'tab_txt2img'
+            this.prompts.forEach(item => {
+                if (item.tab !== activeTabId) return
+                const ref = this.$refs[item.id]
+                if (!ref || !ref[0]) return
+                if (!item.neg && pos.length) ref[0].prependTags(pos)
+                if (item.neg && neg.length) ref[0].prependTags(neg)
+            })
+        },
+        // ------------------------------------------------------------------
         onQualityPresetsClick(id) {
             this.qualityPresetsCurrentId = id
             this.$refs.qualityPresets.open()
