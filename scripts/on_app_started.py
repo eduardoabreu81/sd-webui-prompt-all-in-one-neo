@@ -21,9 +21,11 @@ from scripts.physton_prompt.get_lang import get_lang
 from scripts.physton_prompt.get_version import get_git_commit_version, get_git_remote_versions, get_latest_version
 from scripts.physton_prompt.mbart50 import initialize as mbart50_initialize, translate as mbart50_translate
 from scripts.physton_prompt.get_group_tags import get_group_tags
+from modules import shared
 from scripts.physton_prompt.get_quality_presets import (
     load_presets, save_presets, detect_preset_for_checkpoint,
     get_current_checkpoint_path, BUILTIN_TEMPLATES,
+    get_installed_checkpoints, scan_checkpoint,
 )
 
 try:
@@ -422,6 +424,22 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
         result['checkpoint_path'] = path
         return result
 
+    @app.get("/physton_prompt/get_installed_checkpoints")
+    async def _get_installed_checkpoints():
+        return {"checkpoints": get_installed_checkpoints()}
+
+    @app.post("/physton_prompt/scan_checkpoint")
+    async def _scan_checkpoint(request: Request):
+        body = await request.json()
+        filepath = body.get('filepath', '')
+        if not filepath:
+            return {"success": False, "message": "filepath is required"}
+        try:
+            result = scan_checkpoint(filepath)
+            return {"success": True, **result}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
     try:
         translate_api = Storage.get('translateApi')
         if translate_api == 'mbart50':
@@ -430,8 +448,26 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
         pass
 
 
+def on_ui_settings():
+    try:
+        section = ('paio_neo', 'Prompt All-in-One Neo')
+        shared.opts.add_option(
+            'paio_neo_civitai_api_key',
+            shared.OptionInfo(
+                '',
+                'CivitAI API Key (used by Quality Presets to detect model family)',
+                gr.Textbox,
+                {'placeholder': 'ey...', 'type': 'password'},
+                section=section,
+            ),
+        )
+    except Exception as e:
+        print(f'sd-webui-prompt-all-in-one failed to register settings: {e}')
+
+
 try:
     script_callbacks.on_app_started(on_app_started)
+    script_callbacks.on_ui_settings(on_ui_settings)
     print('sd-webui-prompt-all-in-one background API service started successfully.')
 except Exception as e:
     print(f'sd-webui-prompt-all-in-one background API service failed to start: {e}')

@@ -10,10 +10,33 @@ from scripts.physton_prompt.storage import Storage
 # ---------------------------------------------------------------------------
 STORAGE_KEY = 'qualityPresets'
 
+def _default_builtin_enabled() -> dict:
+    """Return a dict with all BUILTIN_TEMPLATES keys set to True."""
+    # Evaluated lazily (after BUILTIN_TEMPLATES is defined) via load_presets().
+    return {k: True for k in BUILTIN_TEMPLATES}
+
 DEFAULT_PRESETS = {
+    # NOTE: CivitAI API key is stored in WebUI settings (shared.opts.paio_neo_civitai_api_key),
+    # not here. Use _get_civitai_api_key() to retrieve it at runtime.
+    # builtin_enabled: per-family toggle (True = use this family's template by default)
+    # Populated at runtime from BUILTIN_TEMPLATES keys; missing keys default to True.
+    'builtin_enabled': {},
+    # builtin_overrides: user-edited tags per family (values follow same schema as BUILTIN_TEMPLATES)
+    'builtin_overrides': {},
+    # checkpoint_cache: SHA-256 → {base_model, filename, scanned_at}
+    # Persisted so repeated opens never call the API twice for the same file.
+    'checkpoint_cache': {},
     'presets': [],
-    'api_key': '',
 }
+
+
+def _get_civitai_api_key() -> str:
+    """Read the CivitAI API key from WebUI settings (Settings → Prompt All-in-One Neo)."""
+    try:
+        from modules import shared
+        return getattr(shared.opts, 'paio_neo_civitai_api_key', '') or ''
+    except Exception:
+        return ''
 
 # ---------------------------------------------------------------------------
 # Built-in template mapping  CivitAI baseModel  →  quality tag blocks
@@ -202,10 +225,15 @@ def fetch_base_model_from_civitai(sha256: str, api_key: str = '') -> str:
 def load_presets() -> dict:
     data = Storage.get(STORAGE_KEY)
     if not isinstance(data, dict):
-        return dict(DEFAULT_PRESETS)
-    # Ensure both keys exist
+        data = {}
     data.setdefault('presets', [])
-    data.setdefault('api_key', '')
+    data.setdefault('builtin_overrides', {})
+    data.setdefault('checkpoint_cache', {})
+    # Ensure every known family is present in builtin_enabled (default True)
+    enabled = data.get('builtin_enabled', {})
+    for key in BUILTIN_TEMPLATES:
+        enabled.setdefault(key, True)
+    data['builtin_enabled'] = enabled
     return data
 
 
@@ -257,7 +285,7 @@ def detect_preset_for_checkpoint(filepath: str) -> dict:
 
     storage = load_presets()
     user_presets = storage.get('presets', [])
-    api_key = storage.get('api_key', '')
+    api_key = _get_civitai_api_key()
 
     # -- Step 1a: exact filename match in user presets ----------------------
     for preset in user_presets:
@@ -297,16 +325,19 @@ def detect_preset_for_checkpoint(filepath: str) -> dict:
                 })
                 return result
 
-        # Fall back to built-in template for this baseModel
-        template = BUILTIN_TEMPLATES.get(base_model)
-        if template:
-            result.update({
-                'source': 'civitai',
-                'positive_prefix': template['positive_prefix'],
-                'negative_prefix': template['negative_prefix'],
-                'auto_insert': False,   # built-in templates are suggested, not auto-inserted
-            })
-            return result
+        # Fall back to built-in template for this baseModel (if enabled)
+        enabled = storage.get('builtin_enabled', {})
+        if enabled.get(base_model, True):
+            overrides = storage.get('builtin_overrides', {})
+            template = overrides.get(base_model) or BUILTIN_TEMPLATES.get(base_model)
+            if template:
+                result.update({
+                    'source': 'civitai',
+                    'positive_prefix': list(template.get('positive_prefix', [])),
+                    'negative_prefix': list(template.get('negative_prefix', [])),
+                    'auto_insert': False,   # built-in templates are suggested, not auto-inserted
+                })
+                return result
 
     # -- Step 2: filename substring match against user presets --------------
     for preset in user_presets:
@@ -325,6 +356,79 @@ def detect_preset_for_checkpoint(filepath: str) -> dict:
 
     # -- No match -----------------------------------------------------------
     return result
+
+
+# ---------------------------------------------------------------------------
+# WebUI integration: installed checkpoints list
+# ---------------------------------------------------------------------------
+
+def get_installed_checkpoints() -> list:
+    """
+    Return a list of dicts for every checkpoint known to the WebUI:
+        [
+            {
+                'filename':   str,   # basename with extension
+                'filepath':   str,   # absolute path
+                'title':      str,   # display name (model title or filename stem)
+                'sha256':     str,   # from sidecar/.safetensors meta, or ''
+                'base_model': str,   # from checkpoint_cache (already scanned), or ''
+            },
+            ...
+        ]
+    """
+    storage = load_presets()
+    cache = storage.get('checkpoint_cache', {})
+
+    checkpoints = []
+    try:
+        from modules import sd_models
+        for info in sd_models.checkpoints_list.values():
+            filepath = getattr(info, 'filename', '')
+            filename = os.path.basename(filepath)
+            title    = getattr(info, 'title', '') or os.path.splitext(filename)[0]
+            sha256   = get_sha256_from_file(filepath) if filepath else ''
+            cached   = cache.get(sha256, {}) if sha256 else {}
+            checkpoints.append({
+                'filename':   filename,
+                'filepath':   filepath,
+                'title':      title,
+                'sha256':     sha256,
+                'base_model': cached.get('base_model', ''),
+            })
+    except Exception:
+        pass
+    return checkpoints
+
+
+def scan_checkpoint(filepath: str) -> dict:
+    """
+    Query CivitAI for a single checkpoint and update checkpoint_cache.
+    Returns {'filename', 'sha256', 'base_model'} — empty strings on failure.
+    """
+    storage = load_presets()
+    api_key = _get_civitai_api_key()
+
+    sha256 = get_sha256_from_file(filepath)
+    if not sha256:
+        return {'filename': os.path.basename(filepath), 'sha256': '', 'base_model': ''}
+
+    base_model = fetch_base_model_from_civitai(sha256, api_key)
+
+    import time
+    cache = storage.get('checkpoint_cache', {})
+    cache[sha256] = {
+        'base_model':  base_model,
+        'filename':    os.path.basename(filepath),
+        'scanned_at':  int(time.time()),
+    }
+    storage['checkpoint_cache'] = cache
+    save_presets(storage)
+
+    return {
+        'filename':   os.path.basename(filepath),
+        'sha256':     sha256,
+        'base_model': base_model,
+    }
 
 
 # ---------------------------------------------------------------------------
