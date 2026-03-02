@@ -17,18 +17,92 @@ DEFAULT_PRESETS = {
 
 # ---------------------------------------------------------------------------
 # Built-in template mapping  CivitAI baseModel  →  quality tag blocks
-# Source: user-confirmed mapping (session context)
+#
+# Sources (research summary):
+#
+#  SD 1.5 / SDXL generic
+#    - "masterpiece, best quality" are Danbooru aesthetic-tier tags; useful but
+#      less impactful in SDXL. Negative: classic "worst quality, low quality, lowres"
+#    https://civitai.com/articles/19069
+#
+#  NoobAI-XL
+#    - Team explicitly mapped percentile tiers in the dataset:
+#        masterpiece (>95th), best quality (85-95th), good quality (60-85th),
+#        normal quality (30-60th), worst quality (<30th)
+#    - Official recommended prefix: "masterpiece, best quality, newest, absurdres, highres"
+#    - Official negative: "worst quality, old, early, low quality, lowres"
+#    https://civitai.com/models/833294/noobai-xl-nai-xl
+#
+#  Pony Diffusion V6 XL
+#    - Uses score_* tags from the Derpibooru rating system (not Danbooru aesthetic tiers)
+#    - Full chain: score_9 > score_8_up > score_7_up > score_6_up > score_5_up > score_4_up
+#    - Best practice: score_9, score_8_up, score_7_up (top 3 is sufficient)
+#    https://civitai.com/models/257749/pony-diffusion-v6-xl
+#
+#  Illustrious XL (v0.1 / 1.0 / 2.0)
+#    - "Raw" base model without strong aesthetic curation; masterpiece still works
+#      in tag-style prompts. Most visual quality comes from LoRA and prompt content.
+#    https://civitai.com/models/1232765/illustrious-xl-10
+#
+#  Flux.1 (dev / schnell / pro)
+#    - Trained on natural-language captions, not Danbooru tag-style data.
+#    - Quality tags have minimal effect; quality comes from descriptive prose prompts.
+#    - Use concrete defect terms in negative (e.g. "extra fingers") rather than
+#      generic quality tags.
+#    https://education.civitai.com/quickstart-guide-to-flux-1/
 # ---------------------------------------------------------------------------
 BUILTIN_TEMPLATES = {
-    'Pony':        {'positive_prefix': ['score_9', 'score_8_up', 'score_7_up'], 'negative_prefix': []},
-    'Illustrious': {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'NoobAI':      {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'SDXL 1.0':   {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'SDXL Turbo':  {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'SD 1.5':      {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'SD 2.1':      {'positive_prefix': ['masterpiece', 'best quality'], 'negative_prefix': []},
-    'FLUX.1 D':    {'positive_prefix': [], 'negative_prefix': []},
-    'FLUX.1 S':    {'positive_prefix': [], 'negative_prefix': []},
+    # --- Pony ---
+    'Pony': {
+        'positive_prefix': ['score_9', 'score_8_up', 'score_7_up'],
+        'negative_prefix': ['score_1', 'score_2', 'score_3'],
+    },
+
+    # --- NoobAI (NoobAI-XL) ---
+    'NoobAI': {
+        'positive_prefix': ['masterpiece', 'best quality', 'newest', 'absurdres', 'highres'],
+        'negative_prefix': ['worst quality', 'old', 'early', 'low quality', 'lowres'],
+    },
+
+    # --- Illustrious XL ---
+    'Illustrious': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+
+    # --- SDXL variants (generic, no dataset-specific quality tags) ---
+    'SDXL 1.0': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+    'SDXL Turbo': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+    'SDXL Lightning': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+
+    # --- SD 1.5 / 2.x ---
+    'SD 1.5': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+    'SD 2.1': {
+        'positive_prefix': ['masterpiece', 'best quality'],
+        'negative_prefix': ['worst quality', 'low quality', 'lowres'],
+    },
+
+    # --- Flux.1 — no quality tags; natural language captions preferred ---
+    'Flux.1 D': {
+        'positive_prefix': [],
+        'negative_prefix': [],
+    },
+    'Flux.1 S': {
+        'positive_prefix': [],
+        'negative_prefix': [],
+    },
 }
 
 # ---------------------------------------------------------------------------
