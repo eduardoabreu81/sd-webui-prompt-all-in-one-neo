@@ -47,6 +47,11 @@
                                          @click="$emit('click:switchTheme', $event)">
                                         <icon-svg class="hover-scale-120" :name="theme === 'dark' ? 'sun': 'moon'"/>
                                     </div>
+                                    <div class="extend-btn-item"
+                                         v-tooltip="'Quality Presets'"
+                                         @click="$emit('click:qualityPresets', $event)">
+                                        <icon-svg class="hover-scale-120" name="quality"/>
+                                    </div>
                                     <div :class="['extend-btn-item', isLatestVersion ? '' : 'red-dot']"
                                          v-tooltip="getLang('about_desc')"
                                          @click="$emit('click:showAbout', $event)">
@@ -1249,6 +1254,23 @@ export default {
         },
         useFavorite(favorite) {
             this.useHistory(favorite)
+        },
+        /**
+         * Insert quality-preset tags at the start of the prompt.
+         * Skips any tag that already exists anywhere in the current list (dedup).
+         * Tags are inserted in original order at position 0.
+         */
+        prependTags(tags) {
+            if (!tags || !tags.length) return
+            const existing = new Set(this.tags.map(t => t.value))
+            // Reverse so that repeated splice(0,…) preserves original order
+            tags.slice().reverse().forEach(value => {
+                if (!existing.has(value)) {
+                    this._appendTag(value, '', false, 0, 'text')
+                    existing.add(value)
+                }
+            })
+            this.updateTags()
         },
         useChatgpt(prompt) {
             let tags = common.splitTags(prompt, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)

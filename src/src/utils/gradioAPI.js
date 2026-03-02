@@ -191,4 +191,20 @@ export default class GradioAPI {
     async getGroupTags(lang) {
         return (await this.api.get("/get_group_tags", {params: {lang}})).data.tags
     }
+
+    async getQualityPresets() {
+        return (await this.api.get("/get_quality_presets")).data.data
+    }
+
+    async saveQualityPresets(data) {
+        return (await this.api.post("/save_quality_presets", data)).data.success
+    }
+
+    async getBuiltinTemplates() {
+        return (await this.api.get("/get_builtin_templates")).data.templates
+    }
+
+    async detectModelPreset(filepath = '') {
+        return (await this.api.get("/detect_model_preset", {params: {filepath}})).data
+    }
 }

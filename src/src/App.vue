@@ -68,6 +68,7 @@
                             @show-extra-networks="onShowExtraNetworks"
                             @hide-extra-networks="onHideExtraNetworks"
                             @refresh-extra-networks="onRefreshExtraNetworks"
+                            @click:quality-presets="onQualityPresetsClick(item.id)"
             ></physton-prompt>
         </template>
         <translate-setting ref="translateSetting" v-model:language-code="languageCode"
@@ -127,6 +128,11 @@
         <chatgpt-prompt ref="chatgptPrompt" v-model:language-code="languageCode"
                         :translate-apis="translateApis" :languages="languages"
                         @use="onUseChatgpt" />
+        <quality-presets ref="qualityPresets"
+                         v-model:language-code="languageCode"
+                         :translate-apis="translateApis" :languages="languages"
+                         @insert-positive="onQualityPresetsInsertPositive"
+                         @insert-negative="onQualityPresetsInsertNegative"/>
         <about ref="about" v-model:language-code="languageCode"
                :translate-apis="translateApis" :languages="languages" />
 
@@ -173,6 +179,7 @@ import jsYaml from "js-yaml";
 import {ref} from "vue";
 import Hotkey from "@/components/hotkey.vue";
 import ExtraNetworksPopup from "@/components/extraNetworksPopup.vue";
+import QualityPresets from "@/components/qualityPresets.vue";
 import waitTick from "@/utils/waitTick";
 
 export default {
@@ -191,7 +198,8 @@ export default {
         SelectLanguage,
         TranslateSetting,
         PhystonPrompt,
-        ExtraNetworksPopup
+        ExtraNetworksPopup,
+        QualityPresets,
     },
     mixins: [],
     data() {
@@ -325,6 +333,7 @@ export default {
             historyCurrentPrompt: '',
             favoriteCurrentPrompt: '',
             chatgptCurrentPrompt: '',
+            qualityPresetsCurrentId: '',
 
             extraNetworks: [],
             loras: [],
@@ -1168,6 +1177,22 @@ export default {
         },
         onShowAbout() {
             this.$refs.about.open()
+        },
+        onQualityPresetsClick(id) {
+            this.qualityPresetsCurrentId = id
+            this.$refs.qualityPresets.open()
+        },
+        onQualityPresetsInsertPositive(tags) {
+            const item = this.prompts.find(p => p.id === this.qualityPresetsCurrentId)
+            if (!item) return
+            const posItem = this.prompts.find(p => p.tab === item.tab && !p.neg)
+            if (posItem && this.$refs[posItem.id]) this.$refs[posItem.id][0].prependTags(tags)
+        },
+        onQualityPresetsInsertNegative(tags) {
+            const item = this.prompts.find(p => p.id === this.qualityPresetsCurrentId)
+            if (!item) return
+            const negItem = this.prompts.find(p => p.tab === item.tab && p.neg)
+            if (negItem && this.$refs[negItem.id]) this.$refs[negItem.id][0].prependTags(tags)
         },
         onSwitchTheme() {
             /*if (common.gradioApp().classList.contains(this.theme)) {

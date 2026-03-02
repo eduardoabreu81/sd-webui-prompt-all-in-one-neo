@@ -21,6 +21,10 @@ from scripts.physton_prompt.get_lang import get_lang
 from scripts.physton_prompt.get_version import get_git_commit_version, get_git_remote_versions, get_latest_version
 from scripts.physton_prompt.mbart50 import initialize as mbart50_initialize, translate as mbart50_translate
 from scripts.physton_prompt.get_group_tags import get_group_tags
+from scripts.physton_prompt.get_quality_presets import (
+    load_presets, save_presets, detect_preset_for_checkpoint,
+    get_current_checkpoint_path, BUILTIN_TEMPLATES,
+)
 
 try:
     from modules.shared import cmd_opts
@@ -394,6 +398,29 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
     @app.get("/physton_prompt/get_group_tags")
     async def _get_group_tags(lang: str):
         return {"tags": get_group_tags(lang)}
+
+    @app.get("/physton_prompt/get_quality_presets")
+    async def _get_quality_presets():
+        return {"data": load_presets()}
+
+    @app.post("/physton_prompt/save_quality_presets")
+    async def _save_quality_presets(request: Request):
+        data = await request.json()
+        if not isinstance(data, dict):
+            return {"success": False, "message": "Invalid data"}
+        save_presets(data)
+        return {"success": True}
+
+    @app.get("/physton_prompt/get_builtin_templates")
+    async def _get_builtin_templates():
+        return {"templates": BUILTIN_TEMPLATES}
+
+    @app.get("/physton_prompt/detect_model_preset")
+    async def _detect_model_preset(filepath: str = ''):
+        path = filepath if filepath else get_current_checkpoint_path()
+        result = detect_preset_for_checkpoint(path)
+        result['checkpoint_path'] = path
+        return result
 
     try:
         translate_api = Storage.get('translateApi')
