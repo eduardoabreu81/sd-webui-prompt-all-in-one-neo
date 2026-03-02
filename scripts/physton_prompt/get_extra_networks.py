@@ -17,7 +17,7 @@ filters = [
 def get_extra_networks():
     result = []
     try:
-        for extra_page in ui_extra_networks.extra_pages:
+        for extra_page in list(ui_extra_networks.extra_pages):
             result_item = {
                 'name': extra_page.name,
                 'title': extra_page.title,

@@ -401,11 +401,11 @@ export default {
                         // 如果原来有括号，就要加到括号内
                         let bracket = common.hasBrackets(value)
                         if (bracket) {
-                            value = common.setLayers(value, 1, bracket[0], bracket[1], ':' + weightNum)
-                            if (localValue !== '') localValue = common.setLayers(localValue, 1, bracket[0], bracket[1], ':' + weightNum)
+                            value = common.setLayers(value, 1, bracket[0], bracket[1], ':' + common.formatWeight(weightNum))
+                            if (localValue !== '') localValue = common.setLayers(localValue, 1, bracket[0], bracket[1], ':' + common.formatWeight(weightNum))
                         } else {
-                            value = value + ':' + weightNum
-                            if (localValue !== '') localValue = localValue + ':' + weightNum
+                            value = value + ':' + common.formatWeight(weightNum)
+                            if (localValue !== '') localValue = localValue + ':' + common.formatWeight(weightNum)
                         }
                     }
                     // 排除Lora、embedding、lyco

@@ -44,6 +44,18 @@ export default {
     },
 
     /**
+     * Format a weight number so it always has at least one decimal place.
+     * Keeps the prompt text consistent and prevents the weight input from
+     * changing width when toggling between integer and fractional values
+     * (e.g. 1 → "1.0", 1.1 → "1.1", 1.12 → "1.12").
+     * @param {number} n
+     * @returns {string}
+     */
+    formatWeight(n) {
+        return Number.isInteger(n) ? n.toFixed(1) : String(n)
+    },
+
+    /**
      * 替换括号
      * @param text
      * @returns {*}

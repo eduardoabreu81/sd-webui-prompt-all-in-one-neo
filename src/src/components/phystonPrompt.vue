@@ -968,9 +968,9 @@ export default {
 
                     if (tag.weightNum > 0 || tag.weightNum < 0) {
                         tag.weightNum = Number(parseFloat(tag.weightNum).toFixed(6))
-                        tag.value = tag.value.replace(common.weightNumRegex, '$1:' + tag.weightNum)
+                        tag.value = tag.value.replace(common.weightNumRegex, '$1:' + common.formatWeight(tag.weightNum))
                         if (tag.localValue !== '') {
-                            tag.localValue = tag.localValue.replace(common.weightNumRegex, '$1:' + tag.weightNum)
+                            tag.localValue = tag.localValue.replace(common.weightNumRegex, '$1:' + common.formatWeight(tag.weightNum))
                         }
                     }
                     if (tag.disabled && !ignoreDisabled) return
@@ -1015,7 +1015,7 @@ export default {
                     } else if (nextIsBreak) {
                         splitSymbol = ' '
                     } else if ((nextIsLora || nextIsLyco) && this.autoRemoveLoraBeforeComma) {
-                        splitSymbol = (this.autoRemoveSpace ? '' : ' ')
+                        splitSymbol = ''
                     }
 
                     if (tag.value === 'BREAK') {
@@ -1032,7 +1032,7 @@ export default {
                     }
 
                     if (splitSymbol === splitSymbolDefault && (tag.isLora || tag.isLyco) && this.autoRemoveLoraAfterComma) {
-                        splitSymbol = (this.autoRemoveSpace ? '' : ' ')
+                        splitSymbol = ''
                     }
 
                     prompt = tag.value + splitSymbol
