@@ -19,9 +19,8 @@
 
 ## 📋 Table of Contents
 
-- [Neo Versioning](#-neo-versioning)
-- [What's New](#-whats-new--v040)
-- [Release Story](#-release-story)
+- [What's New](#-whats-new)
+- [Changelog](#-changelog)
 - [Roadmap](#️-roadmap)
 - [Features](#-features)
   - [Quality Presets](#-quality-presets-)
@@ -30,23 +29,14 @@
 - [Language Support](#-language-support)
 - [Translation APIs](#-translation-apis)
 - [Credits](#-credits)
-- [Support](#-support)
 
 ---
 
-## 🔢 Neo Versioning
+## 🆕 What's New
 
-Neo uses semantic versioning:
+### v0.4.0 — Settings Migration
 
-- `X` = Major updates (breaking changes or major architecture shifts)
-- `Y` = Minor updates (new features and UX improvements)
-- `Z` = Bug fixes, regressions, and stability patches
-
----
-
-## 🆕 What's New — v0.4.0
-
-> **Settings Migration** — translation API keys are now stored securely in **Forge Settings → Prompt All-in-One Neo**, never passing through the browser.
+> Translation API keys are now stored securely in **Forge Settings → Prompt All-in-One Neo**, never passing through the browser.
 
 - **🔒 Translation API keys in Forge Settings** — all 16 supported translation services (Google, OpenAI, Microsoft, Baidu, DeepL, Alibaba, and more) now have dedicated password fields in Forge Settings; keys are applied server-side and never exposed to the browser ⭐
 - **✅ No forced migration** — existing setups continue to work; Forge Settings take priority when filled, so you can migrate at your own pace ⭐
@@ -54,7 +44,7 @@ Neo uses semantic versioning:
 
 ---
 
-## 📖 Release Story
+## 📖 Changelog
 
 ### v0.4.0 — Settings Migration
 > Translation API credentials moved out of the browser and into Forge Settings, where they belong.
@@ -355,9 +345,11 @@ Most have a free tier — register and obtain a key:
 
 **[sd-webui-prompt-all-in-one-neo](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo)** by **[Eduardo Abreu](https://github.com/eduardoabreu81)**
 
-- Forge Neo compatibility: removed `modules.sd_hijack` dependency, token counter via `get_prompt_lengths_on_ui`
-- Safe `cmd_opts.data_dir` fallback for Forge Neo's modified arg set
-- UX fixes from upstream community issues: #250, #294, #341
+- Full compatibility with Forge Neo
+- Quality Presets with CivitAI model detection
+- BREAK / AND visual separators, Favorites export / import
+- Translation API credentials in Forge Settings
+- Various UX fixes from upstream community reports
 
 ### Special Thanks
 
@@ -372,22 +364,11 @@ MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ☕ Support
-
-If you find this extension helpful, consider:
-
-- ⭐ [Starring the repository](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo)
-- 🐛 [Reporting issues](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)
-- 📢 Sharing with others
-- ☕ [Buy me a coffee](https://ko-fi.com/eduardoabreu81)
-
----
-
 <div align="center">
 
 Made with ❤️ for the Stable Diffusion community
 
-**[Report Bug](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Request Feature](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)**
+**[Report Bug](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Request Feature](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Discussions](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/discussions)** • **[☕ Ko-fi](https://ko-fi.com/eduardoabreu81)**
 
 Original extension by **[Physton](https://github.com/Physton/sd-webui-prompt-all-in-one)** — please ⭐ the original repo if you find this useful.
 
