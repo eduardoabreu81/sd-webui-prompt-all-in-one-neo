@@ -30,6 +30,7 @@
 - [Language Support](#-language-support)
 - [Translation APIs](#-translation-apis)
 - [Credits](#-credits)
+- [Support](#-support)
 
 ---
 
@@ -368,6 +369,17 @@ Most have a free tier — register and obtain a key:
 ## 📜 License
 
 MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## ☕ Support
+
+If you find this extension helpful, consider:
+
+- ⭐ [Starring the repository](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo)
+- 🐛 [Reporting issues](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)
+- 📢 Sharing with others
+- ☕ [Buy me a coffee](https://ko-fi.com/eduardoabreu81)
 
 ---
 
