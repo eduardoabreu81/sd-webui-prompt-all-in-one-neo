@@ -383,16 +383,6 @@ If you find this extension helpful, consider:
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome:
-- 🐛 Report bugs
-- 💡 Suggest new features
-- 🔧 Submit pull requests
-- 📖 Improve documentation
-
----
-
 <div align="center">
 
 Made with ❤️ for the Stable Diffusion community
