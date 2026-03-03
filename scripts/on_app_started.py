@@ -334,6 +334,7 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
             return {"success": False, "message": get_lang('is_required', {'0': 'api'})}
         if 'api_config' not in data:
             return {"success": False, "message": get_lang('is_required', {'0': 'api_config'})}
+        data['api_config'] = _inject_forge_credentials(data['api'], data.get('api_config', {}))
         return translate(data['text'], data['from_lang'], data['to_lang'], data['api'], data['api_config'])
 
     @app.post("/physton_prompt/translates")
@@ -349,6 +350,7 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
             return {"success": False, "message": get_lang('is_required', {'0': 'api'})}
         if 'api_config' not in data:
             return {"success": False, "message": get_lang('is_required', {'0': 'api_config'})}
+        data['api_config'] = _inject_forge_credentials(data['api'], data.get('api_config', {}))
         return translate(data['texts'], data['from_lang'], data['to_lang'], data['api'], data['api_config'])
 
     @app.get("/physton_prompt/get_csvs")
@@ -451,6 +453,7 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
 def on_ui_settings():
     try:
         section = ('paio_neo', 'Prompt All-in-One Neo')
+
         shared.opts.add_option(
             'paio_neo_civitai_api_key',
             shared.OptionInfo(
@@ -461,8 +464,81 @@ def on_ui_settings():
                 section=section,
             ),
         )
+
+        # Translation API credentials — stored server-side, never exposed to the browser
+        for (api, field, label) in _TRANSLATE_CREDENTIAL_FIELDS:
+            opt_key = _forge_setting_key(api, field)
+            shared.opts.add_option(
+                opt_key,
+                shared.OptionInfo(
+                    '',
+                    f'[Translation] {label}',
+                    gr.Textbox,
+                    {'placeholder': '', 'type': 'password'},
+                    section=section,
+                ),
+            )
+
     except Exception as e:
         print(f'sd-webui-prompt-all-in-one failed to register settings: {e}')
+
+
+# ---------------------------------------------------------------------------
+# Credential injection: Forge Settings → translate() call
+# ---------------------------------------------------------------------------
+
+# (api_key, field, description)
+_TRANSLATE_CREDENTIAL_FIELDS = [
+    ('google',      'api_key',           'Google Translate – API Key'),
+    ('openai',      'api_key',           'OpenAI – API Key (translation / ChatGPT)'),
+    ('microsoft',   'api_key',           'Microsoft Azure Translator – API Key'),
+    ('amazon',      'api_key_id',        'Amazon Translate – Access Key ID'),
+    ('amazon',      'api_key_secret',    'Amazon Translate – Secret Access Key'),
+    ('deepl',       'api_key',           'DeepL – API Key'),
+    ('yandex',      'api_key',           'Yandex Translate – API Key'),
+    ('myMemory',    'api_key',           'MyMemory – API Key'),
+    ('baidu',       'app_id',            'Baidu Translate – App ID'),
+    ('baidu',       'app_secret',        'Baidu Translate – App Secret'),
+    ('alibaba',     'access_key_id',     'Alibaba Translate – Access Key ID'),
+    ('alibaba',     'access_key_secret', 'Alibaba Translate – Access Key Secret'),
+    ('youdao',      'app_id',            'Youdao Translate – App ID'),
+    ('youdao',      'app_secret',        'Youdao Translate – App Secret'),
+    ('tencent',     'secret_id',         'Tencent Translate – Secret ID'),
+    ('tencent',     'secret_key',        'Tencent Translate – Secret Key'),
+    ('niutrans',    'api_key',           'NiuTrans – API Key'),
+    ('caiyun',      'token',             'Caiyun Translate – Token'),
+    ('volcengine',  'access_key_id',     'Volcengine Translate – Access Key ID'),
+    ('volcengine',  'access_key_secret', 'Volcengine Translate – Access Key Secret'),
+    ('iflytekV1',   'app_id',            'iFlytek V1 – App ID'),
+    ('iflytekV1',   'api_secret',        'iFlytek V1 – API Secret'),
+    ('iflytekV1',   'api_key',           'iFlytek V1 – API Key'),
+    ('iflytekV2',   'app_id',            'iFlytek V2 – App ID'),
+    ('iflytekV2',   'api_secret',        'iFlytek V2 – API Secret'),
+    ('iflytekV2',   'api_key',           'iFlytek V2 – API Key'),
+]
+
+
+def _forge_setting_key(api: str, field: str) -> str:
+    return f'paio_neo_translate_{api}_{field}'
+
+
+def _inject_forge_credentials(api: str, api_config: dict) -> dict:
+    """Merge Forge Settings credentials into api_config before calling the translator.
+
+    Priority: Forge Settings > value already in api_config (previously from Storage).
+    Falls back to whatever the frontend sent (backwards-compatibility).
+    """
+    config = dict(api_config) if api_config else {}
+    try:
+        for (a, field, _) in _TRANSLATE_CREDENTIAL_FIELDS:
+            if a != api:
+                continue
+            val = getattr(shared.opts, _forge_setting_key(a, field), '')
+            if val:
+                config[field] = val
+    except Exception:
+        pass
+    return config
 
 
 try:

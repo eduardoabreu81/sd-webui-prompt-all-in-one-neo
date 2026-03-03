@@ -23,7 +23,7 @@
 ## 📋 Table of Contents
 
 - [Neo Versioning](#-neo-versioning)
-- [What's New](#-whats-new--v030)
+- [What's New](#-whats-new--v040)
 - [Release Story](#-release-story)
 - [Roadmap](#️-roadmap)
 - [Features](#-features)
@@ -46,17 +46,27 @@ Neo uses semantic versioning:
 
 ---
 
-## 🆕 What's New — v0.3.0
+## 🆕 What's New — v0.4.0
 
-> **UX Features** — two of the most-requested community improvements: visual section dividers for `BREAK` / `AND` tokens and a full export/import system for the Favorites list.
+> **Settings Migration** — translation API keys are now stored securely in **Forge Settings → Prompt All-in-One Neo**, never passing through the browser. The translate settings panel still works for non-sensitive options; credential fields show a redirect notice.
 
-- **🔀 BREAK / AND visual separator** — `BREAK` and `AND` tokens now render as a full-width `— BREAK —` divider line in the tag area, making attention-split boundaries instantly visible regardless of any auto-break settings ⭐ (#278)
-- **📤 Export Favorites** — one-click download of all four favorites groups (txt2img positive/negative, img2img positive/negative) as a single `paio-neo-favorites.json` file ⭐ (#330)
-- **📥 Import Favorites** — upload a previously exported JSON to restore or merge favorites across installs; each group is validated before writing ⭐ (#330)
+- **🔒 Translation API keys in Forge Settings** — 26 password fields registered for all 16 supported translation services (Google, OpenAI, Microsoft, Baidu, DeepL, Alibaba, and more); keys are injected server-side before each API call, so they never travel to the browser ⭐
+- **⏎ Backwards-compatible** — keys previously saved in the extension’s local Storage still work; Forge Settings take priority when set, so migration is gradual with no forced reset ⭐
+- **🪣 Translate settings panel** — credential fields no longer editable in the UI; replaced with a “Set in Forge Settings” notice so the panel remains informative without leaking secrets ⭐
 
 ---
 
 ## 📖 Release Story
+
+### v0.4.0
+> **Theme: Settings Migration** — translation API credentials moved to Forge Settings; keys never leave the server.
+
+- [x] `on_app_started.py`: `_TRANSLATE_CREDENTIAL_FIELDS` list — 26 entries mapping all 16 translation APIs to their respective secret fields
+- [x] `on_app_started.py`: `_forge_setting_key(api, field)` helper — generates `paio_neo_translate_{api}_{field}` option key
+- [x] `on_app_started.py`: `_inject_forge_credentials(api, api_config)` — called in `/translate` and `/translates` endpoints; overrides privacy fields with Forge Settings values before forwarding to the translator backend; falls back to existing `api_config` if the setting is empty (backwards-compat)
+- [x] `on_app_started.py` `on_ui_settings()`: registers 26 password fields under **Forge Settings → Prompt All-in-One Neo** using the `[Translation]` prefix for discoverability
+- [x] `translateSetting.vue`: `config.privacy` fields render as a `.forge-settings-notice` div instead of an editable input
+- [x] `translateSetting.vue` `onTestClick()` / `onSaveClick()`: privacy fields filtered out of the `configs` object before sending to the backend (server injects them from Forge Settings)
 
 ### v0.3.0
 > **Theme: UX Features** — BREAK/AND visual separators and Favorites export/import, addressing the two most-voted open issues from the upstream physton repo.
@@ -132,11 +142,16 @@ User-defined per-checkpoint quality tag presets with CivitAI integration, plus t
 - **Duplicate-safe insertion**: `prependTags()` skips tags already present in the prompt ✅
 - CivitAI API key in **Forge Settings → Prompt All-in-One Neo** ✅
 - Detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template ✅
-- Deferred to follow-up: `modelspec.trigger_phrase` pre-population; translation API keys settings migration
+- Deferred to follow-up: `modelspec.trigger_phrase` pre-population
 
 ### v0.3.0 — UX Features *(complete)*
 - Visual BREAK / AND separator in the tag area (#278) ✅
 - Export / import favorites list (#330) ✅
+
+### v0.4.0 — Settings Migration *(complete)*
+- All 16 translation API credentials registered as password fields in **Forge Settings → Prompt All-in-One Neo** ✅
+- `_inject_forge_credentials()`: server-side injection before each translate call; backwards-compatible fallback to Storage ✅
+- Translate settings panel: credential fields replaced with Forge Settings redirect notice ✅
 
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved

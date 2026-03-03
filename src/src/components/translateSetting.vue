@@ -36,10 +36,16 @@
                     <div class="setting-line" v-for="config in configs">
                         <div class="line-title">{{ config.title }}</div>
                         <div class="line-content">
-                            <input type="text" v-if="config.type == 'input'" v-model="config.value" @change="onChangeConfigValue(config)">
-                            <select v-if="config.type == 'select'" v-model="config.value">
-                                <option v-for="option in config.options" :value="option">{{ option }}</option>
-                            </select>
+                            <!-- privacy fields are managed in Forge Settings, not editable here -->
+                            <div v-if="config.privacy" class="forge-settings-notice">
+                                🔒 {{ getLang('set_in_forge_settings') || 'Set in Forge Settings → Prompt All-in-One Neo' }}
+                            </div>
+                            <template v-else>
+                                <input type="text" v-if="config.type == 'input'" v-model="config.value" @change="onChangeConfigValue(config)">
+                                <select v-if="config.type == 'select'" v-model="config.value">
+                                    <option v-for="option in config.options" :value="option">{{ option }}</option>
+                                </select>
+                            </template>
                             <div v-if="config.desc" v-html="config.desc"></div>
                         </div>
                     </div>
@@ -292,6 +298,7 @@ Github: {{name}}`
             this.loading = true
             let configs = {}
             for (const item of this.configs) {
+                if (item.privacy) continue  // credentials injected server-side from Forge Settings
                 configs[item.key] = item.value
             }
             this.translate(this.testText, 'en_US', this.languageCode, this.apiKey, configs).then(res => {
@@ -327,6 +334,7 @@ Github: {{name}}`
             this.isOpen = false
             let configs = {}
             for (const item of this.configs) {
+                if (item.privacy) continue  // credentials stored in Forge Settings, not here
                 configs[item.key] = item.value
             }
             this.$emit('update:translateApi', this.apiKey)
