@@ -1,6 +1,3 @@
-<p align="center">
-  <img src=".github/banner.png" alt="Banner"/>
-</p>
 # ✏️ Prompt All-in-One Neo
 
 <div align="center">
@@ -15,15 +12,21 @@
 
 > ⚠️ **This is a fork.** All core functionality was created by [Physton](https://github.com/Physton) in the original [sd-webui-prompt-all-in-one](https://github.com/Physton/sd-webui-prompt-all-in-one). This Neo fork exists solely to maintain compatibility with Forge Neo and to apply community-reported UX fixes that were never merged upstream. If you are not running Forge Neo, **please use the original extension instead**.
 
+<div align="center">
+
+### [🇺🇸 English](README.MD) | [🇷🇺 Русский](README_RU.MD) | [🇨🇳 简体中文](README_CN.MD) | [🇯🇵 日本語](README_JP.MD) | [🇰🇷 한국어](README_KR.MD) | [🇨🇳 繁體中文](README_TW.MD)
+
+</div>
+
 ---
 
 ## 📋 Table of Contents
 
-- [What's New](#-whats-new)
-- [Changelog](#-changelog)
+- [Neo Versioning](#-neo-versioning)
+- [What's New](#-whats-new--v011)
+- [Release Story](#-release-story)
 - [Roadmap](#️-roadmap)
 - [Features](#-features)
-  - [Quality Presets](#-quality-presets-)
 - [Demo](#-demo)
 - [Installation](#-installation)
 - [Language Support](#-language-support)
@@ -32,93 +35,67 @@
 
 ---
 
-## 🆕 What's New
+## 🔢 Neo Versioning
 
-### v0.3.0 — UX Features
+Neo uses semantic versioning:
 
-> Two of the most-requested improvements from the community.
-
-- **BREAK / AND visual separator** — `BREAK` and `AND` tokens now always render as a full-width `— BREAK —` divider in the tag area, making attention boundaries instantly visible (#278) ⭐
-- **Export Favorites** — one-click download of all four favorites groups as a single JSON file (#330) ⭐
-- **Import Favorites** — restore your favorites from a previously exported file; useful when switching installs or sharing presets (#330) ⭐
+- `X` = Major updates (breaking changes or major architecture shifts)
+- `Y` = Minor updates (new features and UX improvements)
+- `Z` = Bug fixes, regressions, and stability patches
 
 ---
 
-## 📖 Changelog
+## 🆕 What's New — v0.1.1
 
-### v0.3.0 — UX Features
-> Two of the most-requested improvements from the community.
+> **UX Improvement Batch** — three upstream issues fixed: runtime crash on extra networks load, inconsistent weight display format, and residual space after LoRA tokens.
 
-- **BREAK / AND visual separator** — `BREAK` and `AND` tokens now always render as a full-width `— BREAK —` divider in the tag area, making attention boundaries instantly visible (#278)
-- **Export Favorites** — one-click download of all four favorites groups as a single JSON file (#330)
-- **Import Favorites** — restore your favorites from a previously exported file; useful when switching installs or sharing presets (#330)
+- **🐛 Extra networks crash fix** — `get_extra_networks` was iterating `ui_extra_networks.extra_pages` directly; in Forge Neo other threads can modify it concurrently, causing `RuntimeError: dictionary changed size during iteration`; now takes a `list()` snapshot before iterating ⭐
+- **🔢 Consistent weight format** — new `formatWeight()` helper always renders integer weights with one decimal place (e.g. `1` → `1.0`, `1.1` stays `1.1`); prevents the weight input field from shifting width when toggling through values like `1.9 → 2.0 → 2.1` ⭐
+- **🔇 No residual space after LoRA** — `autoRemoveLoraBeforeComma` and `autoRemoveLoraAfterComma` now always set `splitSymbol = ''`; previously they set `' '` when `autoRemoveSpace` was off, leaving a stray space after every LoRA token ⭐
 
-### v0.2.0 — Quality Presets
-> Per-checkpoint quality tag presets with CivitAI auto-detection.
+---
 
-- **Templates tab** — built-in quality tag sets for Pony, NoobAI, Illustrious, SDXL, SD 1.5, and Flux.1; each family independently toggleable with editable positive and negative overrides
-- **Checkpoints tab** — identifies any installed checkpoint’s model family by querying CivitAI; per-row Detect and Scan All buttons; results cached so the API is never called twice for the same file
-- **Custom tab** — define your own quality tags matched by checkpoint filename; mark as auto-insert to have them applied whenever you switch to that model
-- **Auto-inject on model switch** — quality tags are prepended automatically when you change checkpoints mid-session, if the matched preset has auto-insert enabled
-- **CivitAI API key** stored in **Forge Settings → Prompt All-in-One Neo** (not in browser storage)
-- Duplicate-safe: existing tags are never doubled when injecting presets
+## 📖 Release Story
 
-### v0.1.2 — Bug Fixes
-> Two long-standing glitches eliminated.
+### v0.1.1
+> **Theme: UX Improvement Batch** — three community-reported issues from the upstream physton repo fixed.
 
-- Fixed a startup flash / double-render that occurred on page load (#328, #289)
-- Fixed LoRA tags incorrectly blinking as “missing” during the initial load before the model list was ready (#269)
+- [x] `get_extra_networks.py`: wrap `ui_extra_networks.extra_pages` with `list()` to take a snapshot before iterating — prevents `RuntimeError: dictionary changed size during iteration` (#250)
+- [x] `common.js`: add `formatWeight(n)` — `Number.isInteger(n) ? n.toFixed(1) : String(n)` — ensures integer weights always emit at least one decimal digit (#341)
+- [x] `phystonPrompt.vue` / `tagMixin.js`: replace all `':' + tag.weightNum` with `':' + common.formatWeight(tag.weightNum)` so the new format is applied consistently everywhere a weight is embedded in a tag string
+- [x] `phystonPrompt.vue`: `autoRemoveLoraBeforeComma` branch: `splitSymbol = (this.autoRemoveSpace ? '' : ' ')` → `splitSymbol = ''` — always removes the separator before a LoRA token, regardless of the global space setting (#294)
+- [x] `phystonPrompt.vue`: `autoRemoveLoraAfterComma` branch: same fix as above for the trailing-separator case (#294)
 
-### v0.1.1 — UX Improvement Batch
-> Three community-reported issues from the upstream repo fixed.
+### v0.1.0
+> **Theme: Forge Neo Baseline** — critical compatibility fixes to make the extension load and run on Forge Neo.
 
-- Fixed a rare crash when the extra-networks list was modified during iteration (#250)
-- Integer weights now always display with one decimal place (e.g. `1.0`) — prevents layout shifts in the input field (#341)
-- Fixed residual space left before/after LoRA tokens when removing them (#294)
-
-### v0.1.0 — Forge Neo Baseline
-> Critical compatibility fixes to make the extension load and run on Forge Neo.
-
-- Removed dependency on a module that no longer exists in Forge Neo (`modules.sd_hijack`)
-- Token counter updated to use the API Forge Neo exposes
-- Safe fallback for a startup argument that was removed from Forge Neo
+- [x] `get_token_counter.py`: removed `from modules.sd_hijack import model_hijack` — `modules/sd_hijack.py` was deleted in Forge Neo; replaced with `sd_models.model_data.sd_model.get_prompt_lengths_on_ui(prompt)` which is the API Forge Neo exposes for token counting
+- [x] `get_token_counter.py`: removed `from modules_forge import forge_version` and the forge/non-forge branching — unified to a single try/except pattern that works on all platforms
+- [x] `on_app_started.py`: `cmd_opts.data_dir` was removed from Forge Neo's `cmd_args.py`; replaced with `getattr(cmd_opts, 'data_dir', None)` to fail gracefully on Neo while keeping backwards compatibility with older forks
+- [x] `.gitignore`: added `.specstory/` to prevent IDE session files from being committed
 
 ---
 
 ## 🗺️ Roadmap
 
 ### v0.1.0 — Forge Neo Baseline *(complete)*
-- Full compatibility with Forge Neo ✅
+- Remove `modules.sd_hijack` dependency ✅
+- Safe `cmd_opts.data_dir` fallback ✅
 
 ### v0.1.1 — UX Improvement Batch *(complete)*
-- Extra-networks crash fix ✅
-- Consistent weight decimal format ✅
-- Clean LoRA token removal ✅
+- Dictionary iteration crash fix (#250) ✅
+- Consistent weight decimal format (#341) ✅
+- Residual space after LoRA tokens (#294) ✅
 
-### v0.1.2 — Bug Fixes *(complete)*
-- Startup flash / double-render fix ✅
-- LoRA tag blinking fix on load ✅
-
-### v0.2.0 — Quality Presets *(complete)*
-- Quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) ✅
-- CivitAI checkpoint detection with SHA-256 ✅
-- Custom presets matched by filename with auto-insert ✅
-- Auto-inject on model switch ✅
-- CivitAI API key in Forge Settings ✅
-
-### v0.3.0 — UX Features *(complete)*
-- BREAK / AND visual separator in the tag area ✅
-- Export / import favorites list ✅
-
-### v0.4.0 — Translation Security *(planned)*
-- Secure storage for translation API credentials
+### v0.2.0 — UX Improvements II *(planned)*
+- Debounce on initialization to reduce UI lag on load (#328/#289)
+- LoRA tag blinking fix when filename ≠ metadata alias (#269)
+- Export / import favorites list (#330)
+- Visual BREAK / AND separator in the tag area (#278)
 
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved
 - Full Forge Neo compatibility guarantee
-
-### vNext — Codebase Refactor *(planned)*
-- Rename internal identifiers from the original physton naming to `paio-neo`
 
 ---
 
@@ -164,14 +141,6 @@
 
 - **Generate prompts with ChatGPT** — describe your scene in plain language and get a prompt back
 - **Configurable model and API key** — works with any OpenAI-compatible endpoint
-
-### 🎯 Quality Presets ⭐
-
-- **Templates** — built-in quality tag sets per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1); each family independently toggleable; editable positive + negative overrides per family
-- **Checkpoint scanner** — identify any installed checkpoint's model family by querying CivitAI with its SHA-256 hash; results cached locally
-- **Custom presets** — define your own quality tags matched by filename substring; mark as **auto-insert** to have them injected whenever you switch to a matching model
-- **Auto-inject on model switch** — when a checkpoint change is detected mid-session and auto-insert is enabled, quality tags are prepended to the active tab automatically
-- **CivitAI API key** stored in **Forge Settings → Prompt All-in-One Neo** (not in browser storage)
 
 ### ⚙️ Format & Settings
 
@@ -336,11 +305,9 @@ Most have a free tier — register and obtain a key:
 
 **[sd-webui-prompt-all-in-one-neo](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo)** by **[Eduardo Abreu](https://github.com/eduardoabreu81)**
 
-- Full compatibility with Forge Neo
-- Quality Presets with CivitAI model detection
-- BREAK / AND visual separators, Favorites export / import
-- Translation API credentials in Forge Settings
-- Various UX fixes from upstream community reports
+- Forge Neo compatibility: removed `modules.sd_hijack` dependency, token counter via `get_prompt_lengths_on_ui`
+- Safe `cmd_opts.data_dir` fallback for Forge Neo's modified arg set
+- UX fixes from upstream community issues: #250, #294, #341
 
 ### Special Thanks
 
@@ -355,11 +322,21 @@ MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome:
+- 🐛 Report bugs
+- 💡 Suggest new features
+- 🔧 Submit pull requests
+- 📖 Improve documentation
+
+---
+
 <div align="center">
 
 Made with ❤️ for the Stable Diffusion community
 
-**[Report Bug](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Request Feature](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Discussions](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/discussions)** • **[☕ Ko-fi](https://ko-fi.com/eduardoabreu81)**
+**[Report Bug](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)** • **[Request Feature](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues)**
 
 Original extension by **[Physton](https://github.com/Physton/sd-webui-prompt-all-in-one)** — please ⭐ the original repo if you find this useful.
 
