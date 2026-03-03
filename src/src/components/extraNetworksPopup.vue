@@ -109,7 +109,12 @@ export default {
                     }
                 } else if (extraNetwork.name === 'lora' || extraNetwork.name === 'lycoris') {
                     for (let item of extraNetwork.items) {
-                        if (item.name.toLowerCase() === name || (item.output_name && item.output_name.toLowerCase() === name)) {
+                        const itemBasename = item.name.replace(/\\/g, '/').split('/').pop()
+                        if (
+                            item.name.toLowerCase() === name ||
+                            (item.output_name && item.output_name.toLowerCase() === name) ||
+                            (itemBasename && itemBasename.toLowerCase() === name)
+                        ) {
                             this.type = extraNetwork.name === 'lora' ? TYPE_LORA : TYPE_LYCO
                             data = item
                             break

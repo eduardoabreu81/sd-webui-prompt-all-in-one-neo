@@ -40,8 +40,17 @@ export default {
                         let list = {}
                         extraNetwork.items.forEach(item => {
                             list[item.name.toLowerCase()] = item.name
+                            // also map just the basename so tags inserted without subfolder path are found
+                            const basename = item.name.replace(/\\/g, '/').split('/').pop()
+                            if (basename && basename.toLowerCase() !== item.name.toLowerCase()) {
+                                list[basename.toLowerCase()] = item.name
+                            }
                             if (item.output_name) {
                                 list[item.output_name.toLowerCase()] = item.name
+                                const outputBasename = item.output_name.replace(/\\/g, '/').split('/').pop()
+                                if (outputBasename && outputBasename.toLowerCase() !== item.output_name.toLowerCase()) {
+                                    list[outputBasename.toLowerCase()] = item.name
+                                }
                             }
                         })
                         if (extraNetwork.name === 'lora') {
@@ -59,7 +68,12 @@ export default {
                 if (extraNetwork.name !== type) continue
                 const nameLowerCase = name.toLowerCase()
                 for (let item of extraNetwork.items) {
-                    if (item.name.toLowerCase() === nameLowerCase || item.output_name?.toLowerCase() === nameLowerCase) {
+                    const itemBasename = item.name.replace(/\\/g, '/').split('/').pop()
+                    if (
+                        item.name.toLowerCase() === nameLowerCase ||
+                        item.output_name?.toLowerCase() === nameLowerCase ||
+                        itemBasename?.toLowerCase() === nameLowerCase
+                    ) {
                         if (!item.civitai_info?.name) return name
                         if (item.civitai_info.model?.name && item.civitai_info.model.name !== item.civitai_info.name) {
                             return '[' + item.civitai_info.name + '] ' + item.civitai_info.model.name
