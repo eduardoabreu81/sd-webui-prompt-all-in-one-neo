@@ -15,12 +15,6 @@
 
 > ⚠️ **This is a fork.** All core functionality was created by [Physton](https://github.com/Physton) in the original [sd-webui-prompt-all-in-one](https://github.com/Physton/sd-webui-prompt-all-in-one). This Neo fork exists solely to maintain compatibility with Forge Neo and to apply community-reported UX fixes that were never merged upstream. If you are not running Forge Neo, **please use the original extension instead**.
 
-<div align="center">
-
-### [🇺🇸 English](README.MD) | [🇷🇺 Русский](README_RU.MD) | [🇨🇳 简体中文](README_CN.MD) | [🇯🇵 日本語](README_JP.MD) | [🇰🇷 한국어](README_KR.MD) | [🇨🇳 繁體中文](README_TW.MD)
-
-</div>
-
 ---
 
 ## 📋 Table of Contents
@@ -51,121 +45,98 @@ Neo uses semantic versioning:
 
 ## 🆕 What's New — v0.4.0
 
-> **Settings Migration** — translation API keys are now stored securely in **Forge Settings → Prompt All-in-One Neo**, never passing through the browser. The translate settings panel still works for non-sensitive options; credential fields show a redirect notice.
+> **Settings Migration** — translation API keys are now stored securely in **Forge Settings → Prompt All-in-One Neo**, never passing through the browser.
 
-- **🔒 Translation API keys in Forge Settings** — 26 password fields registered for all 16 supported translation services (Google, OpenAI, Microsoft, Baidu, DeepL, Alibaba, and more); keys are injected server-side before each API call, so they never travel to the browser ⭐
-- **⏎ Backwards-compatible** — keys previously saved in the extension’s local Storage still work; Forge Settings take priority when set, so migration is gradual with no forced reset ⭐
-- **🪣 Translate settings panel** — credential fields no longer editable in the UI; replaced with a “Set in Forge Settings” notice so the panel remains informative without leaking secrets ⭐
+- **🔒 Translation API keys in Forge Settings** — all 16 supported translation services (Google, OpenAI, Microsoft, Baidu, DeepL, Alibaba, and more) now have dedicated password fields in Forge Settings; keys are applied server-side and never exposed to the browser ⭐
+- **✅ No forced migration** — existing setups continue to work; Forge Settings take priority when filled, so you can migrate at your own pace ⭐
+- **👁️ Cleaner translate panel** — credential fields are no longer editable in the translation settings popup; a notice directs you to Forge Settings instead ⭐
 
 ---
 
 ## 📖 Release Story
 
-### v0.4.0
-> **Theme: Settings Migration** — translation API credentials moved to Forge Settings; keys never leave the server.
+### v0.4.0 — Settings Migration
+> Translation API credentials moved out of the browser and into Forge Settings, where they belong.
 
-- [x] `on_app_started.py`: `_TRANSLATE_CREDENTIAL_FIELDS` list — 26 entries mapping all 16 translation APIs to their respective secret fields
-- [x] `on_app_started.py`: `_forge_setting_key(api, field)` helper — generates `paio_neo_translate_{api}_{field}` option key
-- [x] `on_app_started.py`: `_inject_forge_credentials(api, api_config)` — called in `/translate` and `/translates` endpoints; overrides privacy fields with Forge Settings values before forwarding to the translator backend; falls back to existing `api_config` if the setting is empty (backwards-compat)
-- [x] `on_app_started.py` `on_ui_settings()`: registers 26 password fields under **Forge Settings → Prompt All-in-One Neo** using the `[Translation]` prefix for discoverability
-- [x] `translateSetting.vue`: `config.privacy` fields render as a `.forge-settings-notice` div instead of an editable input
-- [x] `translateSetting.vue` `onTestClick()` / `onSaveClick()`: privacy fields filtered out of the `configs` object before sending to the backend (server injects them from Forge Settings)
+- All 16 translation service credentials (API keys, app IDs, secrets) are now password fields in **Forge Settings → Prompt All-in-One Neo**
+- Keys are applied on the server before each call — they never appear in browser network traffic
+- Existing credentials saved locally continue to work; Forge Settings simply take priority
+- The translate settings popup no longer shows editable fields for credentials — a redirect notice points to Forge Settings
 
-### v0.3.0
-> **Theme: UX Features** — BREAK/AND visual separators and Favorites export/import, addressing the two most-voted open issues from the upstream physton repo.
+### v0.3.0 — UX Features
+> Two of the most-requested improvements from the community.
 
-- [x] `tagMixin.js` `_setTagClass()`: added `tag.isKeyword` flag; when `tag.value === 'BREAK' || tag.value === 'AND'` set `tag.isKeyword = true` and override inner class to `keyword-separator-tag` (#278)
-- [x] `tagMixin.js` `renderTag()`: removed `autoBreakBeforeWrap || autoBreakAfterWrap` guard — BREAK/AND now always render as `— LABEL —` HTML (#278)
-- [x] `phystonPrompt.vue`: outer `.prompt-tag` container receives `keyword-tag` class when `tag.isKeyword === true` — enables full-width block layout via CSS (#278)
-- [x] `favorite.vue`: added `popup-actions` bar with **Export** button and **Import** file-input above the tabs (#330)
-- [x] `favorite.vue` `exportFavorites()`: JSON-encodes all four favorite groups and triggers browser download as `paio-neo-favorites.json` (#330)
-- [x] `favorite.vue` `onImportFileChange()`: parses uploaded JSON, validates keys, writes each group via `gradioAPI.setData('favorite.{key}', list)`, then reloads all groups (#330)
-- [x] `styles/main.min.css` + `styles/main.less`: new CSS rules for `.keyword-tag` (full-width container, hide delete/extend buttons) and `.popup-actions` (export/import bar styling)
+- **BREAK / AND visual separator** — `BREAK` and `AND` tokens now always render as a full-width `— BREAK —` divider in the tag area, making attention boundaries instantly visible (#278)
+- **Export Favorites** — one-click download of all four favorites groups as a single JSON file (#330)
+- **Import Favorites** — restore your favorites from a previously exported file; useful when switching installs or sharing presets (#330)
 
-### v0.2.0
-> **Theme: Quality Presets + Settings Foundation** — full Quality Presets system with CivitAI integration, auto-inject on model switch, and first step of settings migration.
+### v0.2.0 — Quality Presets
+> Per-checkpoint quality tag presets with CivitAI auto-detection.
 
-- [x] `get_quality_presets.py`: `BUILTIN_TEMPLATES` dict covering Pony, NoobAI, Illustrious, SDXL variants, SD 1.5/2.1, Flux.1 — tag choices sourced from official model pages
-- [x] `get_quality_presets.py`: `detect_preset_for_checkpoint()` — detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template
-- [x] `get_quality_presets.py`: `get_sha256_from_file()` — reads `modelspec.hash_sha256` from safetensors header, falls back to `.sha256` sidecar
-- [x] `get_quality_presets.py`: `fetch_base_model_from_civitai()` — browser-style `User-Agent` header to bypass Cloudflare error 1010
-- [x] `get_quality_presets.py`: `get_installed_checkpoints()` + `scan_checkpoint()` — list & per-file CivitAI scan with persistent `checkpoint_cache`
-- [x] `on_app_started.py`: 5 new REST endpoints (`get_quality_presets`, `save_quality_presets`, `get_builtin_templates`, `detect_model_preset`, `get_installed_checkpoints`, `scan_checkpoint`)
-- [x] `on_app_started.py`: `on_ui_settings()` — registers `paio_neo_civitai_api_key` (password field) in **Forge Settings → Prompt All-in-One Neo**
-- [x] `qualityPresets.vue`: 3-tab 710-line component — Templates (per-family toggle + edit), Checkpoints (scan + badge), Custom (add/delete presets)
-- [x] `App.vue`: `startCheckpointWatcher()` — polls `/detect_model_preset` every 3 s; injects tags when checkpoint path changes and `auto_insert === true`
-- [x] `phystonPrompt.vue` `prependTags()`: duplicate-safe — skips tags already present in the current list
+- **Templates tab** — built-in quality tag sets for Pony, NoobAI, Illustrious, SDXL, SD 1.5, and Flux.1; each family independently toggleable with editable positive and negative overrides
+- **Checkpoints tab** — identifies any installed checkpoint’s model family by querying CivitAI; per-row Detect and Scan All buttons; results cached so the API is never called twice for the same file
+- **Custom tab** — define your own quality tags matched by checkpoint filename; mark as auto-insert to have them applied whenever you switch to that model
+- **Auto-inject on model switch** — quality tags are prepended automatically when you change checkpoints mid-session, if the matched preset has auto-insert enabled
+- **CivitAI API key** stored in **Forge Settings → Prompt All-in-One Neo** (not in browser storage)
+- Duplicate-safe: existing tags are never doubled when injecting presets
 
-### v0.1.2
-> **Theme: Bug Fixes** — two long-standing initialization and visual glitches eliminated.
+### v0.1.2 — Bug Fixes
+> Two long-standing glitches eliminated.
 
-- [x] `phystonPrompt.vue` `init()`: wrap body in `setTimeout(..., 300)` — gives Forge time to restore session textarea value before first parse; eliminates double-render flash on page load (#328/#289)
-- [x] `tagMixin.js` `_setTagClass()`: guard `lora-not-exists` / `lyco-not-exists` behind `!Array.isArray(this.loras)` — while the extra-networks API is loading, `loras` is `[]` (Array); the indicator is now suppressed until the dict is populated, eliminating the startup blink (#269)
+- Fixed a startup flash / double-render that occurred on page load (#328, #289)
+- Fixed LoRA tags incorrectly blinking as “missing” during the initial load before the model list was ready (#269)
 
-### v0.1.1
-> **Theme: UX Improvement Batch** — three community-reported issues from the upstream physton repo fixed.
+### v0.1.1 — UX Improvement Batch
+> Three community-reported issues from the upstream repo fixed.
 
-- [x] `get_extra_networks.py`: wrap `ui_extra_networks.extra_pages` with `list()` to take a snapshot before iterating — prevents `RuntimeError: dictionary changed size during iteration` (#250)
-- [x] `common.js`: add `formatWeight(n)` — `Number.isInteger(n) ? n.toFixed(1) : String(n)` — ensures integer weights always emit at least one decimal digit (#341)
-- [x] `phystonPrompt.vue` / `tagMixin.js`: replace all `':' + tag.weightNum` with `':' + common.formatWeight(tag.weightNum)` so the new format is applied consistently everywhere a weight is embedded in a tag string
-- [x] `phystonPrompt.vue`: `autoRemoveLoraBeforeComma` branch: `splitSymbol = (this.autoRemoveSpace ? '' : ' ')` → `splitSymbol = ''` — always removes the separator before a LoRA token, regardless of the global space setting (#294)
-- [x] `phystonPrompt.vue`: `autoRemoveLoraAfterComma` branch: same fix as above for the trailing-separator case (#294)
+- Fixed a rare crash when the extra-networks list was modified during iteration (#250)
+- Integer weights now always display with one decimal place (e.g. `1.0`) — prevents layout shifts in the input field (#341)
+- Fixed residual space left before/after LoRA tokens when removing them (#294)
 
-### v0.1.0
-> **Theme: Forge Neo Baseline** — critical compatibility fixes to make the extension load and run on Forge Neo.
+### v0.1.0 — Forge Neo Baseline
+> Critical compatibility fixes to make the extension load and run on Forge Neo.
 
-- [x] `get_token_counter.py`: removed `from modules.sd_hijack import model_hijack` — `modules/sd_hijack.py` was deleted in Forge Neo; replaced with `sd_models.model_data.sd_model.get_prompt_lengths_on_ui(prompt)` which is the API Forge Neo exposes for token counting
-- [x] `get_token_counter.py`: removed `from modules_forge import forge_version` and the forge/non-forge branching — unified to a single try/except pattern that works on all platforms
-- [x] `on_app_started.py`: `cmd_opts.data_dir` was removed from Forge Neo's `cmd_args.py`; replaced with `getattr(cmd_opts, 'data_dir', None)` to fail gracefully on Neo while keeping backwards compatibility with older forks
-- [x] `.gitignore`: added `.specstory/` to prevent IDE session files from being committed
+- Removed dependency on a module that no longer exists in Forge Neo (`modules.sd_hijack`)
+- Token counter updated to use the API Forge Neo exposes
+- Safe fallback for a startup argument that was removed from Forge Neo
 
 ---
 
 ## 🗺️ Roadmap
 
 ### v0.1.0 — Forge Neo Baseline *(complete)*
-- Remove `modules.sd_hijack` dependency ✅
-- Safe `cmd_opts.data_dir` fallback ✅
+- Full compatibility with Forge Neo ✅
 
 ### v0.1.1 — UX Improvement Batch *(complete)*
-- Dictionary iteration crash fix (#250) ✅
-- Consistent weight decimal format (#341) ✅
-- Residual space after LoRA tokens (#294) ✅
+- Extra-networks crash fix ✅
+- Consistent weight decimal format ✅
+- Clean LoRA token removal ✅
 
 ### v0.1.2 — Bug Fixes *(complete)*
-- Debounce on initialization to reduce UI lag on load (#328/#289) ✅
-- LoRA tag blinking fix when filename ≠ metadata alias (#269) ✅
+- Startup flash / double-render fix ✅
+- LoRA tag blinking fix on load ✅
 
-### v0.2.0 — Quality Presets + Settings Foundation *(complete)*
-User-defined per-checkpoint quality tag presets with CivitAI integration, plus the first settings migrated into **Forge Settings → Prompt All-in-One Neo**.
-- **Templates tab**: built-in quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) ✅
-- **Checkpoints tab**: scan via CivitAI SHA-256; per-row Detect and Scan All; results cached ✅
-- **Custom tab**: user-defined presets matched by filename substring with auto-insert flag ✅
-- **Auto-inject on model switch**: when checkpoint changes mid-session and auto-insert is enabled, tags are prepended automatically ✅
-- **Duplicate-safe insertion**: `prependTags()` skips tags already present in the prompt ✅
-- CivitAI API key in **Forge Settings → Prompt All-in-One Neo** ✅
-- Detection chain: exact filename → CivitAI SHA-256 → filename substring → built-in template ✅
-- Deferred to follow-up: `modelspec.trigger_phrase` pre-population
+### v0.2.0 — Quality Presets *(complete)*
+- Quality tag templates per model family (Pony, NoobAI, Illustrious, SDXL, SD 1.5, Flux.1) ✅
+- CivitAI checkpoint detection with SHA-256 ✅
+- Custom presets matched by filename with auto-insert ✅
+- Auto-inject on model switch ✅
+- CivitAI API key in Forge Settings ✅
 
 ### v0.3.0 — UX Features *(complete)*
-- Visual BREAK / AND separator in the tag area (#278) ✅
-- Export / import favorites list (#330) ✅
+- BREAK / AND visual separator in the tag area ✅
+- Export / import favorites list ✅
 
 ### v0.4.0 — Settings Migration *(complete)*
-- All 16 translation API credentials registered as password fields in **Forge Settings → Prompt All-in-One Neo** ✅
-- `_inject_forge_credentials()`: server-side injection before each translate call; backwards-compatible fallback to Storage ✅
-- Translate settings panel: credential fields replaced with Forge Settings redirect notice ✅
+- All 16 translation API credentials in Forge Settings ✅
+- Credentials applied server-side, never exposed to the browser ✅
 
 ### v1.0.0 — First Stable Release *(planned)*
 - All known regressions resolved
-- Quality Presets and Settings migration complete
 - Full Forge Neo compatibility guarantee
 
 ### vNext — Codebase Refactor *(planned)*
-- Rename internal Python package `scripts/physton_prompt/` → `scripts/paio_neo/` and update all imports
-- Rename API route prefix `/physton_prompt/` → `/paio_neo/` across `on_app_started.py` and `gradioAPI.js`
-- Update `localStorage` keys from `phystonPrompt*` to `paioNeo*`
-- CSS class rename (`physton-prompt` → `paio-neo`) is low priority — no functional impact
+- Rename internal identifiers from the original physton naming to `paio-neo`
 
 ---
 
