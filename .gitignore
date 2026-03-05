@@ -6,3 +6,11 @@
 /styles/extensions/demo
 __pycache__
 .specstory/
+# ============================================
+# Documentação privada de contexto para IA
+# (contém decisões internas e histórico)
+# ============================================
+AGENTS.local.md
+docs/PROJECT_LOG.md
+.specstory/
+.github/copilot-instructions.md
