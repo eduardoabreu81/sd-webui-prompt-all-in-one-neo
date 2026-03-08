@@ -5,12 +5,20 @@
             <!-- export / import actions (#330) -->
             <div class="popup-actions">
                 <div class="popup-action-btn" @click="exportFavorites" :title="'Export favorites as JSON'">
-                    <icon-svg name="copy"/> Export
+                    <icon-svg name="copy"/> Export JSON
                 </div>
                 <label class="popup-action-btn" :title="'Import favorites from JSON'">
-                    <icon-svg name="use"/> Import
+                    <icon-svg name="use"/> Import JSON
                     <input ref="importInput" type="file" accept=".json" style="display:none"
                            @change="onImportFileChange"/>
+                </label>
+                <div class="popup-action-btn" @click="exportFavoritesCSV" :title="'Export favorites as CSV (Excel)'"  >
+                    <icon-svg name="copy"/> Export CSV
+                </div>
+                <label class="popup-action-btn" :title="'Import favorites from CSV'">
+                    <icon-svg name="use"/> Import CSV
+                    <input ref="importCSVInput" type="file" accept=".csv" style="display:none"
+                           @change="onImportCSVFileChange"/>
                 </label>
             </div>
             <div class="popup-tabs">
@@ -312,7 +320,133 @@ export default {
             })
         },
 
-        // ---- Export / Import (#330) -----------------------------------------
+        // ---- Export / Import CSV (#csv) ------------------------------------
+        /**
+         * Escape a single value for RFC-4180 CSV.
+         * Fields containing comma, double-quote or newline are wrapped in quotes;
+         * internal double-quotes are doubled.
+         */
+        csvEscape(val) {
+            const s = (val === null || val === undefined) ? '' : String(val)
+            if (s.includes(',') || s.includes('"') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+                return '"' + s.replace(/"/g, '""') + '"'
+            }
+            return s
+        },
+        /**
+         * Download all favorite groups as a single CSV file.
+         * Columns: group, name, prompt, date
+         * UTF-8 BOM prefix so Excel auto-detects encoding on Windows.
+         */
+        exportFavoritesCSV() {
+            const rows = [['group', 'name', 'prompt', 'date']]
+            this.favorites.forEach(group => {
+                group.list.forEach(item => {
+                    rows.push([
+                        group.key,
+                        item.name || '',
+                        item.prompt || '',
+                        this.formatTime(item.time),
+                    ])
+                })
+            })
+            const csv = '\uFEFF' + rows.map(r => r.map(f => this.csvEscape(f)).join(',')).join('\n')
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'})
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'paio-neo-favorites.csv'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+        },
+        /**
+         * Parse an RFC-4180 CSV string into an array of rows (each row = array of strings).
+         * Handles BOM, quoted fields, escaped quotes and CRLF/LF line endings.
+         */
+        parseCSV(text) {
+            const src = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text
+            const rows = []
+            let i = 0
+            const n = src.length
+            while (i < n) {
+                const row = []
+                while (i < n) {
+                    let field = ''
+                    if (src[i] === '"') {
+                        i++ // opening quote
+                        while (i < n) {
+                            if (src[i] === '"') {
+                                if (i + 1 < n && src[i + 1] === '"') {
+                                    field += '"'; i += 2
+                                } else {
+                                    i++; break // closing quote
+                                }
+                            } else {
+                                field += src[i++]
+                            }
+                        }
+                    } else {
+                        while (i < n && src[i] !== ',' && src[i] !== '\n' && src[i] !== '\r') {
+                            field += src[i++]
+                        }
+                    }
+                    row.push(field)
+                    if (i < n && src[i] === ',') { i++; continue }
+                    break
+                }
+                if (i < n && src[i] === '\r') i++
+                if (i < n && src[i] === '\n') i++
+                if (!(row.length === 1 && row[0] === '')) rows.push(row)
+            }
+            return rows
+        },
+        /** Read the selected CSV file and replace storage for each group present */
+        async onImportCSVFileChange(e) {
+            const file = e.target.files[0]
+            if (!file) return
+            try {
+                const text = await file.text()
+                const rows = this.parseCSV(text)
+                if (rows.length < 2) throw new Error('Empty file')
+                const header = rows[0].map(h => h.trim().toLowerCase())
+                const gi = header.indexOf('group')
+                const ni = header.indexOf('name')
+                const pi = header.indexOf('prompt')
+                if (gi === -1 || pi === -1) throw new Error('Missing required columns: group, prompt')
+                // Group data rows by group key
+                const byGroup = {}
+                const validKeys = this.favorites.map(g => g.key)
+                rows.slice(1).forEach((row, idx) => {
+                    const key = row[gi] ? row[gi].trim() : ''
+                    if (!validKeys.includes(key)) return
+                    if (!byGroup[key]) byGroup[key] = []
+                    byGroup[key].push({
+                        id: Date.now() + idx,
+                        prompt: row[pi] || '',
+                        name: ni !== -1 ? (row[ni] || '') : '',
+                        time: Math.floor(Date.now() / 1000),
+                        is_favorite: true,
+                        tags: [],
+                    })
+                })
+                if (Object.keys(byGroup).length === 0) throw new Error('No valid group rows found')
+                for (const key of Object.keys(byGroup)) {
+                    await this.gradioAPI.setData('favorite.' + key, byGroup[key])
+                }
+                for (const group of this.favorites) {
+                    await this.getFavorites(group.key)
+                }
+                this.$toastr.success('Favorites imported from CSV!')
+            } catch (err) {
+                this.$toastr.error('CSV import failed: ' + err.message)
+            } finally {
+                e.target.value = ''
+            }
+        },
+
+        // ---- Export / Import JSON (#330) ------------------------------------
         /**
          * Download all favorite groups as a single JSON file.
          * Format: { [groupKey]: [items...], ... }
