@@ -34,17 +34,24 @@
 
 ## 🆕 What's New
 
-### v0.3.0 — UX Features
+### v0.3.1 — UX Patch
 
-> Two of the most-requested improvements from the community.
+> Quality-of-life patch on top of v0.3.0.
 
-- **BREAK / AND visual separator** — `BREAK` and `AND` tokens now always render as a full-width `— BREAK —` divider in the tag area, making attention boundaries instantly visible (#278) ⭐
-- **Export Favorites** — one-click download of all four favorites groups as a single JSON file (#330) ⭐
-- **Import Favorites** — restore your favorites from a previously exported file; useful when switching installs or sharing presets (#330) ⭐
+- **Prompt Format toggle for BREAK / AND visual separator** — choose between classic keyword chips and visual full-width separator rendering
+- **BREAK / AND drag restored** — separator mode no longer blocks dragging
+- **BREAK / AND quick delete restored** — separator mode keeps quick removal behavior via `x`
 
 ---
 
 ## 📖 Changelog
+
+### v0.3.1 — UX Patch
+> Follow-up fix for BREAK / AND visual separator behavior.
+
+- Added a **Prompt Format** toggle to enable/disable visual separator rendering for `BREAK` / `AND`
+- Fixed a regression where visual separators could block drag-and-drop reordering
+- Fixed quick delete usability for `BREAK` / `AND` in visual separator mode
 
 ### v0.3.0 — UX Features
 > Two of the most-requested improvements from the community.
@@ -109,6 +116,10 @@
 ### v0.3.0 — UX Features *(complete)*
 - BREAK / AND visual separator in the tag area ✅
 - Export / import favorites list ✅
+
+### v0.3.1 — UX Patch *(complete)*
+- Prompt Format toggle for BREAK / AND visual separator ✅
+- BREAK / AND drag and quick delete behavior preserved in separator mode ✅
 
 ### v0.4.0 — Translation Security *(planned)*
 - Secure storage for translation API credentials

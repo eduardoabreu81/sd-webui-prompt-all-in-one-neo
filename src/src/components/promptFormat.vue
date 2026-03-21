@@ -36,6 +36,12 @@
                            @change="$emit('update:autoBreakAfterWrap', $event.target.checked)">
                     <div class="format-desc" v-html="getLang('is_break_after_wrap')"></div>
                 </div>
+                  <div class="format-item">
+                      <input class="format-checkbox" type="checkbox"
+                          :checked="visualBreakSeparator"
+                          @change="$emit('update:visualBreakSeparator', $event.target.checked)">
+                      <div class="format-desc">Render BREAK/AND as visual separators</div>
+                  </div>
                 <div class="format-item">
                     <input class="format-checkbox" type="checkbox"
                            :checked="autoRemoveLoraBeforeComma"
@@ -98,6 +104,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        visualBreakSeparator: {
+            type: Boolean,
+            default: true,
+        },
         autoRemoveLoraBeforeComma: {
             type: Boolean,
             default: false,
@@ -120,7 +130,7 @@ export default {
             isOpen: false,
         }
     },
-    emits: ['update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma'],
+    emits: ['update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:visualBreakSeparator', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma'],
     computed: {},
     mounted() {
     },

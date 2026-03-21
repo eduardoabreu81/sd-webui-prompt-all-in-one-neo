@@ -141,9 +141,10 @@ export default {
             }
 
             tag.classes = classes
-            // Mark BREAK and AND as visual keyword separators (#278).
-            // These get rendered differently in the tag chip area.
-            if (!tag.isLora && !tag.isLyco && !tag.isEmbedding &&
+            // Mark BREAK and AND as visual keyword separators only when
+            // the Prompt Format toggle is enabled.
+            if (this.visualBreakSeparator &&
+                !tag.isLora && !tag.isLyco && !tag.isEmbedding &&
                 (tag.value === 'BREAK' || tag.value === 'AND')) {
                 tag.isKeyword = true
                 tag.classes = ['prompt-tag-value', 'keyword-separator-tag']
@@ -204,9 +205,9 @@ export default {
             let tag = this.tags.find(tag => tag.id === id)
             if (!tag) return ''
             let value = tag.value
-            // BREAK and AND are always rendered as visual section separators (#278).
-            // Previously only rendered specially when autoBreakBeforeWrap/AfterWrap was on.
-            if (value === 'BREAK' || value === 'AND') {
+            // BREAK and AND can be rendered as visual separators when enabled
+            // in Prompt Format; otherwise they keep standard chip rendering.
+            if (this.visualBreakSeparator && (value === 'BREAK' || value === 'AND')) {
                 return '<span class="break-character">—</span> <span class="keyword-label">' + value + '</span> <span class="break-character">—</span>'
             } else {
                 value = common.escapeHtml(value)

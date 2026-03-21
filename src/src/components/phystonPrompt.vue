@@ -651,6 +651,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        visualBreakSeparator: {
+            type: Boolean,
+            default: true,
+        },
         autoRemoveLoraBeforeComma: {
             type: Boolean,
             default: false,

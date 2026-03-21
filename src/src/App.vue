@@ -20,6 +20,7 @@
                             v-model:auto-keep-weight-one="autoKeepWeightOne"
                             v-model:auto-break-before-wrap="autoBreakBeforeWrap"
                             v-model:auto-break-after-wrap="autoBreakAfterWrap"
+                            :visual-break-separator="visualBreakSeparator"
                             v-model:auto-remove-lora-before-comma="autoRemoveLoraBeforeComma"
                             v-model:auto-remove-lora-after-comma="autoRemoveLoraAfterComma"
                             v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
@@ -93,6 +94,7 @@
                        v-model:auto-keep-weight-one="autoKeepWeightOne"
                        v-model:auto-break-before-wrap="autoBreakBeforeWrap"
                        v-model:auto-break-after-wrap="autoBreakAfterWrap"
+                       v-model:visual-break-separator="visualBreakSeparator"
                        v-model:auto-remove-lora-before-comma="autoRemoveLoraBeforeComma"
                        v-model:auto-remove-lora-after-comma="autoRemoveLoraAfterComma"
                        v-model:use-novel-ai-weight-symbol="useNovelAiWeightSymbol"
@@ -313,6 +315,7 @@ export default {
             autoKeepWeightOne: false,
             autoBreakBeforeWrap: false,
             autoBreakAfterWrap: false,
+            visualBreakSeparator: true,
             autoRemoveLoraBeforeComma: false,
             autoRemoveLoraAfterComma: false,
             useNovelAiWeightSymbol: false,
@@ -484,6 +487,19 @@ export default {
                 if (!this.startWatchSave) return
                 console.log('onAutoBreakAfterWrap', val)
                 this.gradioAPI.setData('autoBreakAfterWrap', val).then(data => {
+                    this.prompts.forEach(item => {
+                        this.$refs[item.id][0].updatePrompt()
+                    })
+                }).catch(err => {
+                })
+            },
+            immediate: false,
+        },
+        visualBreakSeparator: {
+            handler: function (val, oldVal) {
+                if (!this.startWatchSave) return
+                console.log('onVisualBreakSeparatorChange', val)
+                this.gradioAPI.setData('visualBreakSeparator', val).then(data => {
                     this.prompts.forEach(item => {
                         this.$refs[item.id][0].updatePrompt()
                     })
@@ -689,7 +705,7 @@ export default {
         },
         init() {
             this.loadExtraNetworks()
-            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
+            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'visualBreakSeparator', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
             this.prompts.forEach(item => {
                 dataListsKeys.push(item.hideDefaultInputKey)
                 dataListsKeys.push(item.autoLoadWebuiPromptKey)
@@ -765,6 +781,9 @@ export default {
                 }
                 if (data.autoBreakAfterWrap !== null) {
                     this.autoBreakAfterWrap = data.autoBreakAfterWrap
+                }
+                if (data.visualBreakSeparator !== null) {
+                    this.visualBreakSeparator = data.visualBreakSeparator
                 }
                 if (data.autoRemoveLoraBeforeComma !== null) {
                     this.autoRemoveLoraBeforeComma = data.autoRemoveLoraBeforeComma
