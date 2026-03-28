@@ -34,6 +34,14 @@
 
 ## 🆕 What's New
 
+### v0.3.2 — Stability Patch
+
+> Small patch focused on a smoother BREAK / AND experience.
+
+- **Better issue detection for BREAK / AND interactions** — the extension now handles this scenario more reliably
+- **Move behavior fixed in visual mode** — BREAK / AND can be moved normally again
+- **Consistent quick actions** — delete and common actions stay available in separator mode
+
 ### v0.3.1 — UX Patch
 
 > Quality-of-life patch on top of v0.3.0.
@@ -45,6 +53,13 @@
 ---
 
 ## 📖 Changelog
+
+### v0.3.2 — Stability Patch
+> Focused fix release for BREAK / AND interaction flow.
+
+- Improved handling when BREAK / AND interaction problems are detected
+- Restored smooth move behavior in visual separator mode
+- Kept quick actions consistent in separator mode
 
 ### v0.3.1 — UX Patch
 > Follow-up fix for BREAK / AND visual separator behavior.
@@ -93,6 +108,11 @@
 ---
 
 ## 🗺️ Roadmap
+
+### v0.3.2 — Stability Patch *(complete)*
+- Better issue detection for BREAK / AND interactions ✅
+- BREAK / AND move behavior fixed in visual mode ✅
+- Quick actions preserved in separator mode ✅
 
 ### v0.1.0 — Forge Neo Baseline *(complete)*
 - Full compatibility with Forge Neo ✅
