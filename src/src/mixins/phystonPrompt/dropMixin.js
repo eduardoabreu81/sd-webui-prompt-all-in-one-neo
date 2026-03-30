@@ -38,6 +38,9 @@ export default {
         },
         onDropMouseDown(e) {
             if (this.droping) return
+            // Do not start selection box when interacting with tags.
+            // This avoids conflicts with Sortable drag start (especially on BREAK/AND chips).
+            if (e.target && e.target.closest && e.target.closest('.prompt-tag-main')) return
             this._dropOver()
             this.dropOffsetX = e.clientX - e.layerX
             this.dropOffsetY = e.clientY - e.layerY
@@ -48,6 +51,7 @@ export default {
             this.dropIsStart = true
         },
         onDropMouseMove(e) {
+            if (this.droping) return
             if (this.dropIsStart) {
                 this.dropIsSelecting = true
                 this.dropEndX = e.clientX - this.dropOffsetX
