@@ -1156,8 +1156,13 @@ export default {
         initSortable() {
             this.sortable = Sortable.create(this.$refs.promptTagsList, {
                 animation: 150,
-                handle: '.prompt-tag-value',
+                // Use prompt-tag-main as the drag handle so BREAK/AND remains draggable
+                // even when external theme CSS affects prompt-tag-value internals.
+                handle: '.prompt-tag-main',
                 draggable: ".prompt-tag",
+                // Keep clicks on interactive controls as normal clicks (not drag starts).
+                filter: '.btn-tag-delete, .btn-tag-extend, .input-tag-edit, button, input, textarea, select, a',
+                preventOnFilter: false,
                 onEnd: (env) => {
                     if (this.dropTags.length) {
                         let current = env.item
