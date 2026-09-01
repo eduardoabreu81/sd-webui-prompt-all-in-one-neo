@@ -5,6 +5,7 @@ from pathlib import Path
 from modules import script_callbacks, extra_networks, prompt_parser
 from fastapi import FastAPI, Body, Request, Response
 from fastapi.responses import FileResponse
+from starlette.concurrency import run_in_threadpool
 from scripts.physton_prompt.storage import Storage
 from scripts.physton_prompt.get_extensions import get_extensions
 from scripts.physton_prompt.get_token_counter import get_token_counter
@@ -334,7 +335,14 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
             return {"success": False, "message": get_lang('is_required', {'0': 'api'})}
         if 'api_config' not in data:
             return {"success": False, "message": get_lang('is_required', {'0': 'api_config'})}
-        return translate(data['text'], data['from_lang'], data['to_lang'], data['api'], data['api_config'])
+        return await run_in_threadpool(
+            translate,
+            data['text'],
+            data['from_lang'],
+            data['to_lang'],
+            data['api'],
+            data['api_config'],
+        )
 
     @app.post("/physton_prompt/translates")
     async def _translates(request: Request):
@@ -349,7 +357,14 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
             return {"success": False, "message": get_lang('is_required', {'0': 'api'})}
         if 'api_config' not in data:
             return {"success": False, "message": get_lang('is_required', {'0': 'api_config'})}
-        return translate(data['texts'], data['from_lang'], data['to_lang'], data['api'], data['api_config'])
+        return await run_in_threadpool(
+            translate,
+            data['texts'],
+            data['from_lang'],
+            data['to_lang'],
+            data['api'],
+            data['api_config'],
+        )
 
     @app.get("/physton_prompt/get_csvs")
     async def _get_csvs():
@@ -385,7 +400,8 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
         if 'api_config' not in data:
             return {"success": False, "message": get_lang('is_required', {'0': 'api_config'})}
         try:
-            return {"success": True, 'result': gen_openai(data['messages'], data['api_config'])}
+            result = await run_in_threadpool(gen_openai, data['messages'], data['api_config'])
+            return {"success": True, 'result': result}
         except Exception as e:
             return {"success": False, 'message': str(e)}
 
