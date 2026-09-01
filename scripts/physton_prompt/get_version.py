@@ -69,7 +69,7 @@ def get_git_remote_versions(page=1, per_page=100, filter_update_readme=False):
         try:
             api_url += f'?page={page}&per_page={per_page}'
             key = hashlib.md5(api_url.encode('utf-8')).hexdigest()
-            response = requests.get(api_url)
+            response = requests.get(api_url, timeout=10)
             versions = _handle_versions(response, filter_update_readme)
             return versions
         except Exception as e:

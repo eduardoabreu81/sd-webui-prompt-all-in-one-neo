@@ -15,10 +15,13 @@ class OpenaiTranslator(BaseTranslator):
                 return ''
         import openai
         from distutils.version import LooseVersion
-        openai.api_base = self.api_config.get('api_base', 'https://api.openai.com/v1')
-        openai.api_key = self.api_config.get('api_key', '')
+        # Keep the credentials local: these calls run on a threadpool, and writing to
+        # openai.api_base / openai.api_key would let concurrent requests (e.g. a
+        # prompt generation using a different provider) overwrite each other's config.
+        api_base = self.api_config.get('api_base', 'https://api.openai.com/v1')
+        api_key = self.api_config.get('api_key', '')
         model = self.api_config.get('model', 'gpt-3.5-turbo')
-        if not openai.api_key:
+        if not api_key:
             raise Exception(get_lang('is_required', {'0': 'API Key'}))
 
         body = []
@@ -38,12 +41,13 @@ class OpenaiTranslator(BaseTranslator):
             },
         ]
         if LooseVersion(openai.__version__) < LooseVersion('1.0.0'):
-            completion = openai.ChatCompletion.create(model=model, messages=messages, timeout=60)
+            completion = openai.ChatCompletion.create(model=model, messages=messages, timeout=60,
+                                                      api_key=api_key, api_base=api_base)
         else:
             from openai import OpenAI
             client = OpenAI(
-                base_url=openai.api_base,
-                api_key=openai.api_key,
+                base_url=api_base,
+                api_key=api_key,
             )
             completion = client.chat.completions.create(model=model, messages=messages, timeout=60)
         if len(completion.choices) == 0:

@@ -68,15 +68,19 @@ except Exception as e:
 def on_app_started(_: gr.Blocks, app: FastAPI):
     hi = History()
 
+    # Sync on purpose: FastAPI runs non-async routes on a threadpool, so this
+    # blocking work never stalls the event loop (and with it, the whole WebUI).
     @app.get("/physton_prompt/get_version")
-    async def _get_version():
+    def _get_version():
         return {
             'version': get_git_commit_version(),
             'latest_version': get_latest_version(),
         }
 
+    # Sync on purpose: FastAPI runs non-async routes on a threadpool, so this
+    # blocking work never stalls the event loop (and with it, the whole WebUI).
     @app.get("/physton_prompt/get_remote_versions")
-    async def _get_remote_versions(page: int = 1, per_page: int = 100):
+    def _get_remote_versions(page: int = 1, per_page: int = 100):
         return {
             'versions': get_git_remote_versions(page, per_page),
         }
@@ -100,7 +104,8 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
             return {"result": get_lang('is_required', {'0': 'name'})}
         if 'package' not in data:
             return {"result": get_lang('is_required', {'0': 'package'})}
-        return {"result": install_package(data['name'], data['package'])}
+        result = await run_in_threadpool(install_package, data['name'], data['package'])
+        return {"result": result}
 
     @app.get("/physton_prompt/get_extensions")
     async def _get_extensions():
@@ -405,8 +410,10 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
         except Exception as e:
             return {"success": False, 'message': str(e)}
 
+    # Sync on purpose: FastAPI runs non-async routes on a threadpool, so this
+    # blocking work never stalls the event loop (and with it, the whole WebUI).
     @app.post("/physton_prompt/mbart50_initialize")
-    async def _mbart50_initialize(request: Request):
+    def _mbart50_initialize(request: Request):
         try:
             mbart50_initialize(True)
             return {"success": True}
