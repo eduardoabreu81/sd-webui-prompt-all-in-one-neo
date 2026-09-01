@@ -34,6 +34,16 @@
 
 ## 🆕 What's New
 
+### v0.3.4 — Responsiveness Fix
+
+> The WebUI no longer freezes while the extension waits on translation or version APIs.
+
+- **The interface stays responsive during AI translation** — translating tags no longer freezes the whole WebUI, Gradio included, while the provider answers (up to 60s on a slow one). Reported and fixed by [@nzs234](https://github.com/nzs234) (#4)
+- **Same treatment for the other slow operations** — checking for updates, installing packages and loading the mbart-50 model no longer block the interface either
+- **The update check can no longer hang forever** — the request to the GitHub / Gitee API now gives up after 10s instead of waiting indefinitely
+- **Translation and prompt generation no longer share OpenAI credentials** — running both at once with different API configs could send one provider's key to the other's endpoint
+- **Weight formatting no longer corrupts tags** — a tag such as `at left: 1girl` is left alone instead of becoming `at left:1.0girl`
+
 ### v0.3.3 — Drag Fix
 
 > Fixes a drag-and-drop regression where tags could leak into other prompts.
@@ -56,9 +66,27 @@
 - **BREAK / AND drag restored** — separator mode no longer blocks dragging
 - **BREAK / AND quick delete restored** — separator mode keeps quick removal behavior via `x`
 
+### v0.3.0 — UX Features
+
+> Two of the most-requested improvements from the community.
+
+- **BREAK / AND visual separator** — `BREAK` and `AND` tokens now always render as a full-width `— BREAK —` divider in the tag area, making attention boundaries instantly visible (#278)
+- **Export Favorites** — one-click download of all four favorites groups as a single JSON file (#330)
+- **Import Favorites** — restore your favorites from a previously exported file; useful when switching installs or sharing presets (#330)
+
 ---
 
 ## 📖 Changelog
+
+### v0.3.4 — Responsiveness Fix
+> Blocking calls moved off the Uvicorn event loop, plus a prompt-corruption fix.
+
+- `/translate`, `/translates` and `/gen_openai` run their synchronous HTTP work through `run_in_threadpool` (#4, by [@nzs234](https://github.com/nzs234))
+- `/get_version`, `/get_remote_versions` and `/mbart50_initialize` declare no `await`, so they are plain `def` again — FastAPI runs non-async routes on a threadpool
+- `/install_package` wraps its `pip` call in `run_in_threadpool`
+- `get_git_remote_versions()` now sends `timeout=10`; it had none, so an unreachable API could hang the request forever
+- `gen_openai()` and `OpenaiTranslator` use local variables instead of the module-level `openai.api_base` / `openai.api_key`, which concurrent requests could overwrite
+- Reverted the `formatWeight()` integer-to-decimal conversion — `weightNumRegex` is unanchored, so it matched `:1` inside tags whose text merely contains a colon followed by a digit
 
 ### v0.3.3 — Drag Fix
 > Fixes a drag-and-drop regression introduced after the BREAK / AND separator improvements.
@@ -120,6 +148,12 @@
 ---
 
 ## 🗺️ Roadmap
+
+### v0.3.4 — Responsiveness Fix *(complete)*
+- Blocking routes moved off the event loop ✅
+- Timeout on the remote version check ✅
+- OpenAI credentials isolated per request ✅
+- `formatWeight()` prompt corruption fixed ✅
 
 ### v0.3.3 — Drag Fix *(complete)*
 - Fixed selection-box interference during Sortable drag ✅
