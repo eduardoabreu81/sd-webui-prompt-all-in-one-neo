@@ -107,7 +107,7 @@
 > Three community-reported issues from the upstream repo fixed.
 
 - Fixed a rare crash when the extra-networks list was modified during iteration (#250)
-- Integer weights now always display with one decimal place (e.g. `1.0`) — prevents layout shifts in the input field (#341)
+- Integer weights now always display with one decimal place (e.g. `1.0`) — prevents layout shifts in the input field (#341) *(reverted 2026-07-04 — it corrupted tags whose text contains a colon followed by a digit, e.g. `at left: 1girl` became `at left:1.0girl`)*
 - Fixed residual space left before/after LoRA tokens when removing them (#294)
 
 ### v0.1.0 — Forge Neo Baseline
