@@ -15,4 +15,5 @@ docs/PROJECT_LOG.md
 .github/copilot-instructions.md
 # Internal agent documentation
 AGENTS.md
+/.codegraph/
 

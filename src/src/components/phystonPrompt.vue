@@ -908,6 +908,10 @@ export default {
             let indexes = []
             let oldTags = this.tags
             this.tags = []
+            // Import external text without reformatting it: Forge's LoRA toggle
+            // removes activation text only when its original suffix matches exactly.
+            // Blacklist filtering is an intentional change and still writes back.
+            let writePrompt = false
             for (let index in tags) {
                 let tag = tags[index]
                 if (tag === "\n") {
@@ -924,6 +928,7 @@ export default {
                     const localValue = find ? find.localValue : ''
                     const disabled = find ? find.disabled : false
                     const index = this._appendTag(tag, localValue, disabled, -1, 'text')
+                    if (index === -1) writePrompt = true
                     if (!find && index !== -1) indexes.push(index)
                 }
             }
@@ -932,10 +937,10 @@ export default {
                 let useNetwork = !(this.tagCompleteFile && this.onlyCsvOnAuto)
                 useNetwork = false // 浪费网络请求，先关闭网络翻译。
                 this.translates(indexes, true, useNetwork).finally(() => {
-                    this.updateTags()
+                    this.updateTags(writePrompt)
                 })
             } else {
-                this.updateTags()
+                this.updateTags(writePrompt)
             }
         },
         _setTextareaFocus() {
@@ -1111,9 +1116,13 @@ export default {
                 this.textarea.dispatchEvent(new Event('input'))
             }
         },
-        updateTags() {
+        updateTags(writePrompt = true) {
             console.log('tags change', this.tags)
-            this.updatePrompt()
+            if (writePrompt) {
+                this.updatePrompt()
+            } else {
+                this.prompt = this.textarea.value
+            }
             const steps = this.steps.querySelector('input[type="number"]').value
             if (!this.$appMode) {
                 this.gradioAPI.tokenCounter(this.textarea.value, steps).then(res => {
