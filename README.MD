@@ -34,6 +34,12 @@
 
 ## 🆕 What's New
 
+### v0.3.5: LoRA Toggle Fix
+
+> Toggling a LoRA card off now removes its activation text again.
+
+- **LoRA activation text is removed correctly**: turning a LoRA card off in Forge's Extra Networks clears the text it added instead of leaving it in the prompt. The extension no longer reformats prompt text it only imports, so Forge's original suffix still matches ([#6](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues/6))
+
 ### v0.3.4 — Responsiveness Fix
 
 > The WebUI no longer freezes while the extension waits on translation or version APIs.
@@ -77,6 +83,12 @@
 ---
 
 ## 📖 Changelog
+
+### v0.3.5: LoRA Toggle Fix
+> Prompt sync no longer reformats text it merely imports.
+
+- Imported textarea text is kept as-is during prompt sync, so Forge can remove the original LoRA activation suffix when a LoRA card is toggled off. Tag edits and blacklist filtering still write back to the prompt (#6)
+- Added regression coverage for prompt sync (`tests/prompt-sync.test.cjs`) and rebuilt the frontend bundle
 
 ### v0.3.4 — Responsiveness Fix
 > Blocking calls moved off the Uvicorn event loop, plus a prompt-corruption fix.
@@ -148,6 +160,9 @@
 ---
 
 ## 🗺️ Roadmap
+
+### v0.3.5: LoRA Toggle Fix *(complete)*
+- LoRA activation text removed on toggle-off ✅
 
 ### v0.3.4 — Responsiveness Fix *(complete)*
 - Blocking routes moved off the event loop ✅
