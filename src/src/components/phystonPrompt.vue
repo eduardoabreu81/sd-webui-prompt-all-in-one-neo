@@ -483,7 +483,7 @@
                                 <div v-for="(group, subIndex) in item.groups" :key="subIndex" :class="['sub-group-main', group.tabKey == subGroupTagsActive ? 'active' : '']">
                                     <Transition name="fade">
                                         <div class="group-tags" v-if="group.tabKey == subGroupTagsActive">
-<div v-if="group.type === 'extraNetworks'" class="group-extra-network"
+                                            <div v-if="group.type === 'extraNetworks'" class="group-extra-network"
                                                   v-for="extraData in group.datas" :key="extraData.name"
                                                   @click="onClickGroupTagExtraNetwork(extraData, item, group)"
                                                   @mouseenter="onGroupExtraNetworkMouseEnter($event, extraData.name)"
