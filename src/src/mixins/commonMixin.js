@@ -26,6 +26,19 @@ export default {
             setTimeout(this.loadExtraNetworks, 1000, loadI + 1)
         },
         _loadExtraNetworks() {
+            const getPromptLoraAlias = prompt => {
+                if (typeof prompt !== 'string') return
+                // Forge wraps the tag prefix in a JSON string before appending the weight.
+                const quotedPrefix = prompt.match(/^"(?:\\.|[^"\\])*"/)?.[0]
+                if (quotedPrefix) {
+                    try {
+                        prompt = JSON.parse(quotedPrefix)
+                    } catch {
+                        return
+                    }
+                }
+                return prompt.match(/^<lora:([^:>]+):/i)?.[1]
+            }
             this.gradioAPI.getExtraNetworks().then(res => {
                 if (!res) return
                 this.extraNetworks = res
@@ -37,7 +50,7 @@ export default {
                         })
                         this.embeddings = list
                     } else if (extraNetwork.name === 'lora' || extraNetwork.name === 'lycoris') {
-                        let list = {}
+                        const list = Object.create(null)
                         extraNetwork.items.forEach(item => {
                             list[item.name.toLowerCase()] = item.name
                             // also map just the basename so tags inserted without subfolder path are found
@@ -54,6 +67,11 @@ export default {
                             }
                         })
                         if (extraNetwork.name === 'lora') {
+                            // Canonical names and metadata names keep priority over prompt aliases.
+                            for (const item of extraNetwork.items) {
+                                const alias = getPromptLoraAlias(item.prompt)
+                                if (alias) list[alias.toLowerCase()] ??= item.name
+                            }
                             this.loras = list
                         } else {
                             this.lycos = list
@@ -67,13 +85,15 @@ export default {
             for (let extraNetwork of this.extraNetworks) {
                 if (extraNetwork.name !== type) continue
                 const nameLowerCase = name.toLowerCase()
+                const resolvedName = type === 'lora' ? this.loras?.[nameLowerCase] : undefined
                 for (let item of extraNetwork.items) {
                     const itemBasename = item.name.replace(/\\/g, '/').split('/').pop()
-                    if (
-                        item.name.toLowerCase() === nameLowerCase ||
-                        item.output_name?.toLowerCase() === nameLowerCase ||
-                        itemBasename?.toLowerCase() === nameLowerCase
-                    ) {
+                    const matches = resolvedName
+                        ? item.name === resolvedName
+                        : item.name.toLowerCase() === nameLowerCase ||
+                          item.output_name?.toLowerCase() === nameLowerCase ||
+                          itemBasename?.toLowerCase() === nameLowerCase
+                    if (matches) {
                         if (!item.civitai_info?.name) return name
                         if (item.civitai_info.model?.name && item.civitai_info.model.name !== item.civitai_info.name) {
                             return '[' + item.civitai_info.name + '] ' + item.civitai_info.model.name
