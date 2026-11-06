@@ -178,6 +178,67 @@ test('external synchronization retains disabled tags without enabling them in th
     assert.equal(prompt.textarea.value, 'green eyes, ')
 })
 
+test('typing in the textarea applies the configured prompt format on sync', () => {
+    const {prompt, inputs} = makePrompt({autoRemoveSpace: true, autoRemoveLastComma: true})
+    prompt.onTextareaInput({isTrusted: true})
+    prompt.textarea.value = 'blue eyes, long hair,'
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'blue eyes,long hair')
+    assert.equal(prompt.prompt, 'blue eyes,long hair')
+    assert.deepEqual(inputs, ['blue eyes,long hair'])
+})
+
+test('synthetic input events keep external text untouched', () => {
+    const {prompt, inputs} = makePrompt({autoRemoveSpace: true, autoRemoveLastComma: true})
+    prompt.onTextareaInput({isTrusted: false})
+    prompt.textarea.value = 'blue eyes, long hair,'
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'blue eyes, long hair,')
+    assert.deepEqual(inputs, [])
+})
+
+test('a LoRA toggle after a formatted manual edit still removes its activation text', () => {
+    const {prompt} = makePrompt({autoRemoveSpace: true, autoRemoveLastComma: true})
+    prompt.onTextareaInput({isTrusted: true})
+    prompt.textarea.value = 'landscape, blue eyes'
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'landscape,blue eyes')
+    const card = '<lora:model_name:0.7> trigger, silver hair,'
+    clickLora(prompt.textarea, card)
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'landscape,blue eyes <lora:model_name:0.7> trigger, silver hair,')
+    clickLora(prompt.textarea, card)
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'landscape,blue eyes')
+})
+
+test('a manual edit that restores the same prompt does not format the next import', () => {
+    const {prompt} = makePrompt({autoRemoveSpace: true})
+    prompt.textarea.value = 'blue eyes, long hair'
+    prompt._onTextareaChange(true)
+    prompt.onTextareaInput({isTrusted: true})
+    prompt._onTextareaChange(true)
+    prompt.textarea.value = 'blue eyes, long hair, silver hair'
+    prompt._onTextareaChange(true)
+    assert.equal(prompt.textarea.value, 'blue eyes, long hair, silver hair')
+})
+
+test('a manual edit is kept pending while the autocomplete popup is open', () => {
+    const popup = {style: {display: 'block'}}
+    const textarea = {
+        value: '',
+        parentElement: {getElementsByClassName: name => name === 'autocompleteResults' ? [popup] : []},
+    }
+    const {prompt} = makePrompt({textarea, autoRemoveSpace: true})
+    prompt.onTextareaInput({isTrusted: true})
+    textarea.value = 'blue eyes, long hair'
+    prompt._onTextareaChange(true)
+    assert.equal(textarea.value, 'blue eyes, long hair')
+    popup.style.display = 'none'
+    prompt._onTextareaChange(true)
+    assert.equal(textarea.value, 'blue eyes,long hair,')
+})
+
 test('externally imported blacklisted tags are still removed from the prompt', () => {
     const {prompt} = makePrompt({blacklist: {prompt: ['unwanted']}, autoRemoveLastComma: true})
     prompt.textarea.value = 'unwanted, blue eyes'

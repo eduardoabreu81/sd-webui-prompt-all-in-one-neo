@@ -768,6 +768,7 @@ export default {
     data() {
         return {
             prompt: '',
+            textareaEditedByUser: false,
             counterText: '0/75',
             tags: [],
 
@@ -846,6 +847,7 @@ export default {
     methods: {
         init() {
             this.tags = []
+            this.textarea.addEventListener('input', this.onTextareaInput)
             // Delay the first parse and polling start by 300ms so that Forge /
             // A1111 has time to restore the session textarea value before we
             // baseline on it.  Without this delay the extension would parse the
@@ -872,6 +874,11 @@ export default {
                 // this.textarea.addEventListener('blur', this.onTextareaChange)
             }, 300)
         },
+        onTextareaInput(event) {
+            // Only real keyboard/paste input is trusted. Forge's updateInput() dispatches
+            // a synthetic event, so LoRA card toggles stay untouched during the sync below.
+            if (event.isTrusted) this.textareaEditedByUser = true
+        },
         onTextareaChange(event) {
             if (this.onTextareaChangeTimeId) clearTimeout(this.onTextareaChangeTimeId)
             this.onTextareaChangeTimeId = setTimeout(() => {
@@ -891,7 +898,10 @@ export default {
             }
 
             let value = this.textarea.value.trim()
-            if (value === this.prompt.trim()) return
+            if (value === this.prompt.trim()) {
+                this.textareaEditedByUser = false
+                return
+            }
             let tags = common.splitTags(value, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
 
             let disabledTags = []
@@ -910,8 +920,9 @@ export default {
             this.tags = []
             // Import external text without reformatting it: Forge's LoRA toggle
             // removes activation text only when its original suffix matches exactly.
-            // Blacklist filtering is an intentional change and still writes back.
-            let writePrompt = false
+            // Manual edits and blacklist filtering are intentional and still write back.
+            let writePrompt = this.textareaEditedByUser
+            this.textareaEditedByUser = false
             for (let index in tags) {
                 let tag = tags[index]
                 if (tag === "\n") {
