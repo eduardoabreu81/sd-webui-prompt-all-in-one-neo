@@ -997,7 +997,22 @@ export default {
                     }
                     if (tag.disabled && !ignoreDisabled) return
 
-                    let splitSymbol = ',' + (this.autoRemoveSpace ? '' : ' ')
+                    // Find the previous wrap tag to determine paragraph boundary
+                    let prevWrapIndex = -1
+                    for (let j = index - 1; j >= 0; j--) {
+                        if (typeof tags2[j]['type'] === 'string' && tags2[j].type === 'wrap') {
+                            prevWrapIndex = j
+                            break
+                        }
+                    }
+
+                    // Get all text tags in current paragraph (after last wrap)
+                    let paraStart = prevWrapIndex + 1
+                    let paraTags = tags2.slice(paraStart, index + 1)
+
+                    // Sentence-mode: any text tag in current paragraph ending with period
+                    let isSentenceMode = paraTags.some(t => t.value.endsWith('.') && t.type !== 'wrap')
+                    let splitSymbol = isSentenceMode ? (this.autoRemoveSpace ? '' : ' ') : (',' + (this.autoRemoveSpace ? '' : ' '))
                     let splitSymbolDefault = splitSymbol
 
                     let nextTag = null
