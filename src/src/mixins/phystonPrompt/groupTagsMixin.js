@@ -393,6 +393,10 @@ export default {
         onGroupExtraNetworkMouseLeave() {
             this.$emit('hideExtraNetworks')
         },
+        onGroupExtraNetworkImageError(extraData) {
+            // A thumbnail key expires when the server restarts; fall back to the original preview.
+            extraData.thumbnail = null
+        },
         onClickGroupExtraNetworkRefresh() {
             this.$emit('refreshExtraNetworks')
             // this.extraNetworksRefreshing = true

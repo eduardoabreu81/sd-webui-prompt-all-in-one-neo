@@ -16,6 +16,7 @@ from scripts.physton_prompt.history import History
 from scripts.physton_prompt.csv import get_csvs, get_csv
 from scripts.physton_prompt.styles import get_style_full_path, get_extension_css_list
 from scripts.physton_prompt.get_extra_networks import get_extra_networks
+from scripts.physton_prompt.get_thumbnail import get_thumbnail_file
 from scripts.physton_prompt.packages import get_packages_state, install_package
 from scripts.physton_prompt.gen_openai import gen_openai
 from scripts.physton_prompt.get_lang import get_lang
@@ -393,9 +394,23 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
     async def _get_extension_css_list():
         return {"css_list": get_extension_css_list()}
 
+    # Non-async on purpose: FastAPI runs these on a threadpool, so listing models
+    # and generating thumbnails don't block the event loop.
     @app.get("/physton_prompt/get_extra_networks")
-    async def _get_extra_networks():
+    def _get_extra_networks():
         return {"extra_networks": get_extra_networks()}
+
+    @app.get("/physton_prompt/thumbnail")
+    def _thumbnail(key: str):
+        file_path = get_thumbnail_file(key)
+        if not file_path:
+            return Response(status_code=404)
+        # The key changes with the source file, so the response never goes stale.
+        return FileResponse(
+            file_path,
+            media_type='image/webp' if file_path.endswith('.webp') else None,
+            headers={'Cache-Control': 'public, max-age=31536000, immutable'},
+        )
 
     @app.post("/physton_prompt/gen_openai")
     async def _gen_openai(request: Request):

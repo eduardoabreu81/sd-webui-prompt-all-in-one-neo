@@ -490,7 +490,11 @@
                                                  @mousemove="onGroupExtraNetworkMouseMove"
                                                  @mouseleave="onGroupExtraNetworkMouseLeave"
                                                  :style="getGroupTagExtraNetworkStyle(extraData)">
-                                                <img class="extra-network-preview" :src="extraData.preview || './file=html/card-no-preview.png'" />
+                                                <img class="extra-network-preview"
+                                                     :src="extraData.thumbnail || extraData.preview || './file=html/card-no-preview.png'"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     @error="onGroupExtraNetworkImageError(extraData)" />
                                                 <div class="extra-network-name">{{ extraData.name }}</div>
                                                 <div class="extra-network-loading" v-if="extraData.loading">
                                                     <icon-svg name="loading"/>

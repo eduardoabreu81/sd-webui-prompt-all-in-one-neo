@@ -4,6 +4,7 @@ from modules import script_callbacks, extra_networks, prompt_parser, shared, ui_
 import json
 import os
 import copy
+from scripts.physton_prompt.get_thumbnail import get_thumbnail_url
 
 filters = [
     # 'filename',
@@ -65,6 +66,8 @@ def get_extra_networks():
                                 item['civitai_info'] = info
                 except Exception as e:
                     pass
+
+                item['thumbnail'] = get_thumbnail_url(item.get('preview'))
 
                 # 过滤掉不需要的字段
                 newItem = {}
