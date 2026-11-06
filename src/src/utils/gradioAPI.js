@@ -175,8 +175,20 @@ export default class GradioAPI {
         return (await this.api.get("/get_extension_css_list")).data.css_list
     }
 
-    async getExtraNetworks() {
-        return (await this.api.get("/get_extra_networks")).data.extra_networks
+    async getExtraNetworks(width = 200, height = 200) {
+        return (await this.api.get("/get_extra_networks", {params: {thumbnail_width: width, thumbnail_height: height}})).data.extra_networks
+    }
+
+    async getExtraNetworksDirs() {
+        return (await this.api.get("/get_extra_networks_dirs")).data.dirs
+    }
+
+    async getExtraNetworksItems(name = null, dirname = null, width = 200, height = 200) {
+        return (await this.api.get("/get_extra_networks_items", {params: {name, dirname, thumbnail_width: width, thumbnail_height: height}})).data.items
+    }
+
+    async loadExtraNetworksItems(name, dirname) {
+        return await this.getExtraNetworksItems(name, dirname, 200, 200)
     }
 
     async genOpenAI(messages, api_config) {

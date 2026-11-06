@@ -17,15 +17,6 @@ export default {
                 if (!this.groupTagsActive || !this.subGroupTagsActive) {
                     this.groupTagsActive = 'favorite'
                     this.subGroupTagsActive = 'favorite-' + this.favoriteKey
-                    /*for (let item of this.groupTags) {
-                        this.groupTagsActive = item.tabKey
-                        for (let group of item.groups) {
-                            if (group.type && group.typ == 'wrap') continue
-                            this.subGroupTagsActive = group.tabKey
-                            break
-                        }
-                        break
-                    }*/
                 }
                 this._setGroupTagItemWidth()
             },
@@ -45,6 +36,13 @@ export default {
             },
             deep: true,
             immediate: true,
+        },
+        subGroupTagsActive: {
+            handler(newVal, oldVal) {
+                if (newVal !== oldVal && this.extraNetworks) {
+                    this._loadFolderItems(newVal)
+                }
+            }
         }
     },
     mounted() {
@@ -89,51 +87,76 @@ export default {
                     groups: [],
                 }
                 this.extraNetworks.forEach(extraNetwork => {
-                    // if (extraNetwork.name === 'checkpoints') return
-                    let subGroup = {
-                        color: '',
-                        name: extraNetwork.title,
-                        tabKey: 'extraNetworks-' + extraNetwork.name,
-                        type: 'extraNetworks',
-                        subType: extraNetwork.name,
-                        tags: {},
-                        datas: [],
-                    }
-                    extraNetwork.items.forEach(item => {
-                        subGroup.datas.push(item)
-                    })
-                    extraNetworksGroup.groups.push(subGroup)
-                    extraNetwork.items.forEach(item => {
-                        item.dirnameFormat = item.dirname.replaceAll('\\', '/')
-                    })
-                    let prefixPath = common.getSamePrefixPath([...new Set(extraNetwork.items.map(item => item.dirnameFormat))])
-                    let baseDirs = []
-                    extraNetwork.items.forEach(item => {
-                        let baseDirname = item.dirnameFormat.replace(prefixPath, '')
-                        if (baseDirname === '') baseDirname = '@root'
-                        baseDirname = baseDirname.replace(/^\//, '')
-                        baseDirs.push(baseDirname)
-                        item.base_dirname = baseDirname
-                    })
-                    baseDirs = [...new Set(baseDirs)]
+                    if (extraNetwork.items && Object.keys(extraNetwork.items).length > 0) {
+                        // Items are loaded - create folder-level groups with actual items
+                        // Use dirs to ensure all folders are shown, even if not loaded yet
+                        let dirsToShow = extraNetwork.dirs || Object.keys(extraNetwork.items)
+                        dirsToShow.forEach(dirname => {
+                            let folderItems = extraNetwork.items[dirname] || []
+                            let folderSubGroup = {
+                                color: '',
+                                name: dirname,
+                                tabKey: 'extraNetworks-' + extraNetwork.name + '-' + dirname,
+                                type: 'extraNetworks',
+                                subType: extraNetwork.name,
+                                tags: {},
+                                datas: folderItems,
+                            }
+                            if (folderItems.length > 0) {
+                                folderItems.forEach(item => {
+                                    item.dirnameFormat = item.dirname.replaceAll('\\', '/')
+                                })
+                                let prefixPath = common.getSamePrefixPath([...new Set(folderItems.map(item => item.dirnameFormat))])
+                                let baseDirs = []
+                                folderItems.forEach(item => {
+                                    let baseDirname = item.dirnameFormat.replace(prefixPath, '')
+                                    if (baseDirname === '') baseDirname = '@root'
+                                    baseDirname = baseDirname.replace(/^\//, '')
+                                    baseDirs.push(baseDirname)
+                                    item.base_dirname = baseDirname
+                                })
+                                baseDirs = [...new Set(baseDirs)]
 
-                    if (baseDirs.length > 1) {
-                        baseDirs.forEach(dir => {
-                            let subDirGroup = {
+                                if (baseDirs.length > 1) {
+                                    baseDirs.forEach(dir => {
+                                        let subDirGroup = {
+                                            color: '',
+                                            name: dir,
+                                            tabKey: 'extraNetworks-' + extraNetwork.name + '-' + dirname + '/' + dir,
+                                            type: 'extraNetworks',
+                                            subType: extraNetwork.name,
+                                            tags: {},
+                                            datas: [],
+                                        }
+                                        folderItems.forEach(item => {
+                                            if (item.base_dirname === dir) {
+                                                subDirGroup.datas.push(item)
+                                            }
+                                        })
+                                        extraNetworksGroup.groups.push(subDirGroup)
+                                    })
+                                } else {
+                                    extraNetworksGroup.groups.push(folderSubGroup)
+                                }
+                            } else {
+                                extraNetworksGroup.groups.push(folderSubGroup)
+                            }
+                        })
+                    } else if (extraNetwork.dirs && extraNetwork.dirs.length > 0) {
+                        // No items loaded yet - create folder tabs
+                        extraNetwork.dirs.forEach(dir => {
+                            let folderSubGroup = {
                                 color: '',
                                 name: dir,
                                 tabKey: 'extraNetworks-' + extraNetwork.name + '-' + dir,
                                 type: 'extraNetworks',
                                 subType: extraNetwork.name,
+                                isFolder: true,
+                                folderName: dir,
                                 tags: {},
                                 datas: [],
                             }
-                            extraNetwork.items.forEach(item => {
-                                if (item.base_dirname === dir) {
-                                    subDirGroup.datas.push(item)
-                                }
-                            })
-                            extraNetworksGroup.groups.push(subDirGroup)
+                            extraNetworksGroup.groups.push(folderSubGroup)
                         })
                     }
                     extraNetworksGroup.groups.push({
@@ -145,6 +168,27 @@ export default {
 
             processed = processed.concat(this.groupTags)
             this.groupTagsProcessed = processed
+        },
+        _loadFolderItems(subGroupTabKey) {
+            if (!subGroupTabKey || !subGroupTabKey.startsWith('extraNetworks-')) return
+            let parts = subGroupTabKey.split('-')
+            // Format: extraNetworks-{name}-{dirname}
+            // parts[0] = 'extraNetworks', parts[1] = name, parts[2:] = dirname
+            if (parts.length < 3) return
+            let name = parts[1]
+            let dirname = parts.slice(2).join('-')
+            if (!dirname || dirname === name) return
+
+            let extraNetwork = this.extraNetworks.find(p => p.name === name)
+            if (!extraNetwork) return
+            if (!extraNetwork.dirs) return
+            if (!extraNetwork.dirs.includes(dirname)) return
+            if (extraNetwork.items && extraNetwork.items[dirname]) return
+
+            this.$emit('refreshExtraNetworks')
+            this.loadExtraNetworksItems(name, dirname).finally(() => {
+                this.$emit('refreshExtraNetworks')
+            })
         },
         saveGroupActive() {
             this.gradioAPI.setData('groupTagsActive-' + this.name, {
@@ -169,7 +213,6 @@ export default {
             this._setGroupTagItemWidth()
         },
         _setGroupTagItemWidth() {
-            // this.$refs.groupTagItem
             this.$nextTick(() => {
                 if (!this.$refs.groupTagItem) return
                 this.$refs.groupTagItem.forEach((item, index) => {
@@ -190,7 +233,6 @@ export default {
             this.$emit('update:hideGroupTags', !this.hideGroupTags)
         },
         onClickGroupTag(local, en, group, subGroup) {
-            // 判断是否存在 tags 中
             let indexes = []
             this.tags.forEach((tag, index) => {
                 if (tag.originalValue === en) {
@@ -226,7 +268,6 @@ export default {
                     if (num > 100) {
                         data.loading = false
                         setTimeout(this.onClickGroupExtraNetworkRefresh, 1000)
-                        // console.log('超时')
                         return
                     }
                     if (opts && opts.sd_model_checkpoint) {
@@ -249,7 +290,6 @@ export default {
                         if (isLoaded) {
                             data.loading = false
                             setTimeout(this.onClickGroupExtraNetworkRefresh, 1000)
-                            // console.log('已加载')
                             return
                         }
                     }
@@ -262,9 +302,7 @@ export default {
                     let e = document.createElement('div')
                     e.innerHTML = data.onclick
                     let onclick = e.textContent || e.innerText
-                    // 去除左右"引号
                     onclick = onclick.replace(/^"/, '').replace(/"$/, '').trim()
-                    // 去除 return
                     onclick = onclick.replace(/^return /, '').trim()
                     console.log(onclick)
                     eval(onclick)
@@ -306,14 +344,12 @@ export default {
             if (this.groupTagsColor[colorKey]) {
                 color = this.groupTagsColor[colorKey]
                 if (common.isColorTransparent(color)) {
-                    // 如果是纯透明，则设为空
                     color = ''
                 }
             }
             if (color) {
                 style = {background: color}
             }
-            // 判断是否存在 tags 中
             for (let tag of this.tags) {
                 if (tag.originalValue === value) {
                     style['filter'] = 'grayscale(1)'
@@ -394,11 +430,65 @@ export default {
             this.$emit('hideExtraNetworks')
         },
         onClickGroupExtraNetworkRefresh() {
-            this.$emit('refreshExtraNetworks')
-            // this.extraNetworksRefreshing = true
-            // this._loadExtraNetworks().finally(() => {
-            //     this.extraNetworksRefreshing = false
-            // })
+            // Find the currently active folder and reload its items
+            if (!this.subGroupTagsActive || !this.subGroupTagsActive.startsWith('extraNetworks-')) {
+                // No extra networks active, just refresh the whole list
+                this._refreshAllExtraNetworks()
+                return
+            }
+            let parts = this.subGroupTagsActive.split('-')
+            if (parts.length < 3) {
+                this._refreshAllExtraNetworks()
+                return
+            }
+            let name = parts[1]
+            let dirname = parts.slice(2).join('-')
+            if (!dirname || dirname === name) {
+                this._refreshAllExtraNetworks()
+                return
+            }
+
+            let extraNetwork = this.extraNetworks.find(p => p.name === name)
+            if (!extraNetwork) {
+                this._refreshAllExtraNetworks()
+                return
+            }
+
+            // Clear items for this specific folder and reload
+            delete extraNetwork.items[dirname]
+            this.loadExtraNetworksItems(name, dirname).finally(() => {
+                // Reload dirs to refresh the folder list
+                this._refreshDirs()
+            })
+        },
+        async _refreshDirs() {
+            try {
+                const dirsData = await this.gradioAPI.getExtraNetworksDirs()
+                if (!dirsData) return
+                dirsData.forEach(newPage => {
+                    let oldPage = this.extraNetworks.find(p => p.name === newPage.name)
+                    if (oldPage) {
+                        oldPage.dirs = newPage.dirs
+                    }
+                })
+            } catch (e) {
+                console.error('[sd-webui-prompt-all-in-one] _refreshDirs error:', e)
+            }
+        },
+        async _refreshAllExtraNetworks() {
+            try {
+                const dirsData = await this.gradioAPI.getExtraNetworksDirs()
+                if (!dirsData) return
+                this.extraNetworks = dirsData.map(page => ({
+                    name: page.name,
+                    title: page.title,
+                    dirs: page.dirs,
+                    items: {},
+                }))
+                this.extraNetworksLoaded = true
+            } catch (e) {
+                console.error('[sd-webui-prompt-all-in-one] _refreshAllExtraNetworks error:', e)
+            }
         },
     }
 }

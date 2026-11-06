@@ -7,7 +7,6 @@
          v-show="isShow"
          :style="style">
         <div class="popup-main">
-            <img class="info-preview" v-if="data.preview" :src="data.preview" :style="previewStyle" @load="onPreviewLoad"/>
             <div class="info-raws">
                 <div class="info-raw">
                     <div class="raw-name">{{ getLang('model_name') }}</div>
@@ -76,7 +75,6 @@ export default {
             from: 'tags',
             data: {},
             style: {},
-            previewStyle: {},
             mouseIn: false,
             eMouseIn: false,
         }
@@ -95,7 +93,6 @@ export default {
             this.from = from
             this.data = {}
             this.style = {}
-            this.previewStyle = {}
             let data
             name = name.toLowerCase()
             for (let extraNetwork of this.extraNetworks) {
@@ -140,29 +137,13 @@ export default {
             this.data.description = data.civitai_info && data.civitai_info.description ? data.civitai_info.description : (data.description || '')
             this.data.description = this.data.description.replace(/<[^>]+>/g, '')
             this.data.trainedWords = data.civitai_info && data.civitai_info.trainedWords ? data.civitai_info.trainedWords : []
-            this.data.preview = data.preview || (data.civitai_info && data.civitai_info.images && data.civitai_info.images.length ? data.civitai_info.images[0] : '')
             this.data.modelId = data.civitai_info && data.civitai_info.modelId ? data.civitai_info.modelId : ''
             this.data.civitaiUrl = this.data.modelId ? this.getCivitaiUrl(this.data.modelId) : ''
             this.$nextTick(() => {
                 const eRect = e.getBoundingClientRect()
                 this.style.top = (eRect.top + e.offsetHeight + 4) + 'px'
                 this.style.left = eRect.left + 'px'
-                if (this.data.preview) {
-                    this.previewStyle = {
-                        width: 'auto',
-                        height: this.$refs.extraNetworks.offsetHeight + 'px',
-                    }
-                }
-                this.$nextTick(() => {
-                    this.onPreviewLoad()
-                })
             })
-        },
-        onPreviewLoad() {
-            const rect = this.$refs.extraNetworks.getBoundingClientRect()
-            if (rect.right > window.innerWidth) {
-                this.style.left = (window.innerWidth - rect.width - 10) + 'px'
-            }
         },
         _hide() {
             if (!this.isShow) return

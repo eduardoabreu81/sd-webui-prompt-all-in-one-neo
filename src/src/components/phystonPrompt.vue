@@ -483,19 +483,22 @@
                                 <div v-for="(group, subIndex) in item.groups" :key="subIndex" :class="['sub-group-main', group.tabKey == subGroupTagsActive ? 'active' : '']">
                                     <Transition name="fade">
                                         <div class="group-tags" v-if="group.tabKey == subGroupTagsActive">
-                                            <div v-if="group.type === 'extraNetworks'" class="group-extra-network"
-                                                 v-for="extraData in group.datas" :key="extraData.name"
-                                                 @click="onClickGroupTagExtraNetwork(extraData, item, group)"
-                                                 @mouseenter="onGroupExtraNetworkMouseEnter($event, extraData.name)"
-                                                 @mousemove="onGroupExtraNetworkMouseMove"
-                                                 @mouseleave="onGroupExtraNetworkMouseLeave"
-                                                 :style="getGroupTagExtraNetworkStyle(extraData)">
-                                                <img class="extra-network-preview" :src="extraData.preview || './file=html/card-no-preview.png'" />
-                                                <div class="extra-network-name">{{ extraData.name }}</div>
-                                                <div class="extra-network-loading" v-if="extraData.loading">
-                                                    <icon-svg name="loading"/>
-                                                </div>
-                                            </div>
+<div v-if="group.type === 'extraNetworks'" class="group-extra-network"
+                                                  v-for="extraData in group.datas" :key="extraData.name"
+                                                  @click="onClickGroupTagExtraNetwork(extraData, item, group)"
+                                                  @mouseenter="onGroupExtraNetworkMouseEnter($event, extraData.name)"
+                                                  @mousemove="onGroupExtraNetworkMouseMove"
+                                                  @mouseleave="onGroupExtraNetworkMouseLeave"
+                                                  :style="getGroupTagExtraNetworkStyle(extraData)">
+                                                 <img class="extra-network-preview"
+                                                      :src="extraData.thumbnail || extraData.preview || './file=html/card-no-preview.png'"
+                                                      loading="lazy"
+                                                      decoding="async" />
+                                                 <div class="extra-network-name">{{ extraData.name }}</div>
+                                                 <div class="extra-network-loading" v-if="extraData.loading">
+                                                     <icon-svg name="loading"/>
+                                                 </div>
+                                             </div>
                                             <div v-else class="tag-item" ref="groupTagItem" v-for="(local, en) in group.tags"
                                                 v-tooltip="getGroupTagTooltip(local, en)"
                                                 @click="onClickGroupTag(local, en, item, group)">
