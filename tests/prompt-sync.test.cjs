@@ -197,6 +197,37 @@ test('synthetic input events keep external text untouched', () => {
     assert.deepEqual(inputs, [])
 })
 
+const groupTagsMixin = loadOptions('src/src/mixins/phystonPrompt/groupTagsMixin.js', {common})
+const failImage = (methods, item, src) =>
+    methods.onGroupExtraNetworkImageError.call(methods, item, {currentTarget: {getAttribute: () => src}})
+
+test('network card previews fall back from thumbnail to local, Civitai and Forge placeholder', () => {
+    const methods = groupTagsMixin.methods
+    const item = {thumbnail: 'thumb.webp', preview: 'local.png', civitai_info: {images: ['remote.jpg']}}
+    assert.equal(methods.networkCardThumbnail.call(methods, item), 'thumb.webp')
+    failImage(methods, item, 'thumb.webp')
+    assert.equal(item.thumbnail, null)
+    assert.equal(methods.networkCardThumbnail.call(methods, item), 'local.png')
+    failImage(methods, item, 'local.png')
+    assert.equal(methods.networkCardThumbnail.call(methods, item), 'remote.jpg')
+    failImage(methods, item, 'remote.jpg')
+    assert.equal(methods.networkCardThumbnail.call(methods, item), './file=html/card-no-preview.png')
+    failImage(methods, item, './file=html/card-no-preview.png')
+    assert.match(methods.networkCardThumbnail.call(methods, item), /^data:image\/svg\+xml/)
+})
+
+test('a failing inline placeholder is not recorded as another failed preview', () => {
+    const methods = groupTagsMixin.methods
+    const item = {preview: 'missing.png'}
+    failImage(methods, item, 'missing.png')
+    failImage(methods, item, './file=html/card-no-preview.png')
+    const svg = methods.networkCardThumbnail.call(methods, item)
+    failImage(methods, item, svg)
+    failImage(methods, item, 'missing.png')
+    assert.equal(methods.networkCardThumbnail.call(methods, item), svg)
+    assert.deepEqual([...item._failedPreviews], ['missing.png', './file=html/card-no-preview.png'])
+})
+
 test('a LoRA toggle after a formatted manual edit still removes its activation text', () => {
     const {prompt} = makePrompt({autoRemoveSpace: true, autoRemoveLastComma: true})
     prompt.onTextareaInput({isTrusted: true})

@@ -1,6 +1,10 @@
 import common from "@/utils/common"
 import {ref} from "vue"
 
+const NO_PREVIEW_URL = './file=html/card-no-preview.png'
+// Last resort when even Forge's placeholder fails; inline so it can never error again.
+const NO_PREVIEW_SVG = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22160%22%20viewBox%3D%220%200%20160%20160%22%3E%3Crect%20width%3D%22160%22%20height%3D%22160%22%20fill%3D%22%2330343b%22%2F%3E%3Ctext%20x%3D%2280%22%20y%3D%2280%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23c7cbd2%22%20font-size%3D%2215%22%20font-family%3D%22sans-serif%22%3ENo%20preview%3C%2Ftext%3E%3C%2Fsvg%3E"
+
 export default {
     data() {
         return {
@@ -345,6 +349,13 @@ export default {
             }
             return indexes
         },
+        networkCardThumbnail(item) {
+            // Try the cached thumbnail, the local preview, the first Civitai image and Forge's
+            // placeholder in turn, skipping any URL that already failed to load.
+            const failed = item._failedPreviews || []
+            return [item.thumbnail, item.preview, item.civitai_info?.images?.[0], NO_PREVIEW_URL]
+                .find(url => url && !failed.includes(url)) || NO_PREVIEW_SVG
+        },
         getGroupTagExtraNetworkStyle(data) {
             let indexes = this._groupTagsExtraNetworkTagsIndexes(data)
             let style = {
@@ -393,8 +404,13 @@ export default {
         onGroupExtraNetworkMouseLeave() {
             this.$emit('hideExtraNetworks')
         },
-        onGroupExtraNetworkImageError(extraData) {
-            // A thumbnail key expires when the server restarts; fall back to the original preview.
+        onGroupExtraNetworkImageError(extraData, event) {
+            // A thumbnail key expires when the server restarts, and local or remote previews can be
+            // missing; remember the failed URL so networkCardThumbnail() moves on to the next one.
+            const current = event?.currentTarget?.getAttribute('src')
+            if (current && current !== NO_PREVIEW_SVG) {
+                extraData._failedPreviews = [...new Set([...(extraData._failedPreviews || []), current])]
+            }
             extraData.thumbnail = null
         },
         onClickGroupExtraNetworkRefresh() {
