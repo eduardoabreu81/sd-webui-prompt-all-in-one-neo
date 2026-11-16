@@ -12,6 +12,19 @@ export default {
         /*common.gradioApp().addEventListener('mousemove', () => {
             this.$refs.highlightPrompt.hide()
         })*/
+        // #11: a tag's height used to be measured once, 50 ms after it rendered.
+        // On page load the prompt panel can still be hidden or settling, so the
+        // measurement came out short and long tags spilled over the UI until they
+        // were re-rendered. Re-sync the height whenever the tag's content resizes.
+        if (typeof ResizeObserver === 'function') {
+            this.tagHeightObserver = new ResizeObserver(entries => {
+                for (const entry of entries) this._applyTagHeight(entry.target)
+            })
+        }
+    },
+    unmounted() {
+        if (this.tagHeightObserver) this.tagHeightObserver.disconnect()
+        this.tagHeightObserver = null
     },
     methods: {
         _setTag(tag) {
@@ -55,15 +68,27 @@ export default {
                 if (!this.$refs['promptTagValue-' + tag.id][0]) return false
                 clearInterval(interval)
                 let $tag = this.$refs['promptTagValue-' + tag.id][0]
-                let height = $tag.offsetHeight
-                $tag.parentNode.style.height = height + 'px'
-                if (this.$refs['promptTagEdit-' + tag.id]) {
-                    this.$refs['promptTagEdit-' + tag.id][0].style.height = height + 'px'
-                }
-                if (this.$refs['promptTagDelete-' + tag.id]) {
-                    this.$refs['promptTagDelete-' + tag.id][0].style.height = height + 'px'
-                }
+                this._applyTagHeight($tag)
+                if (this.tagHeightObserver) this.tagHeightObserver.observe($tag)
             }, 50)
+        },
+        _applyTagHeight($tag) {
+            if (!$tag.isConnected) {
+                // the tag was deleted: stop watching it
+                if (this.tagHeightObserver) this.tagHeightObserver.unobserve($tag)
+                return
+            }
+            let height = $tag.offsetHeight
+            // 0 while the panel is hidden or the tag is being edited (the textarea
+            // replaces it): keep the last good height instead of pinning 0px
+            if (height <= 0) return
+            let $edit = $tag.parentNode
+            if (!$edit) return
+            $edit.style.height = height + 'px'
+            let $input = $edit.querySelector('.input-tag-edit')
+            if ($input) $input.style.height = height + 'px'
+            let $delete = $edit.querySelector('.btn-tag-delete')
+            if ($delete) $delete.style.height = height + 'px'
         },
         _getTagType(tag) {
 

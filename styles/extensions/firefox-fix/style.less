@@ -10,6 +10,11 @@
                             --pp-pt-dsb-ptl-pt-ptm-pte-promptTagValue-width: calc(100% - 8px);
                             .character {
                                 --pp-pt-dsb-ptl-pt-ptm-pte-ptv-character-white-space: nowrap;
+                                // #11: a long tag on one line ends in "…" inside its box
+                                // instead of running past it
+                                min-width: 0;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
                             }
                         }
                         .input-tag-edit {
