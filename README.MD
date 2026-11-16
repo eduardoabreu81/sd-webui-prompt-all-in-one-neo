@@ -34,6 +34,16 @@
 
 ## 🆕 What's New
 
+### v0.3.6: Long Tags & Card Previews
+
+> Long tags stay inside their box, and the Extra Networks panel loads faster.
+
+- **Long tags no longer spill over the panel**: a paragraph wrapped in weight brackets, restored when the page loads, used to overflow its tag and cover the buttons below until you loaded it again from the history. Its box now grows with the text ([#11](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues/11))
+- **"Temporary fix for issues caused by css in Firefox" works again**: long tags stay inside their box and end in "…" instead of running off the screen on one line ([#11](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues/11))
+- **Lighter Extra Networks cards**: cards show small thumbnails instead of full-size previews, and a card whose image fails falls back to the local preview, the Civitai image or a placeholder instead of a broken image
+- **LoRAs inserted by Forge are recognized**: a LoRA added from its card under its alias is highlighted like any other LoRA
+- **Typed prompts follow the format settings again**: "Remove the spaces" and "Remove the last comma" apply as you type ([#7](https://github.com/eduardoabreu81/sd-webui-prompt-all-in-one-neo/issues/7))
+
 ### v0.3.5: LoRA Toggle Fix
 
 > Toggling a LoRA card off now removes its activation text again.
@@ -83,6 +93,16 @@
 ---
 
 ## 📖 Changelog
+
+### v0.3.6: Long Tags & Card Previews
+> Tag heights follow their content, and panel cards load thumbnails.
+
+- `_setTagHeight()` measured each tag once, 50 ms after rendering, and pinned its box to that height. On page load the panel can still be hidden or settling, so long tags got a one-line box and overflowed. A `ResizeObserver` now re-syncs the height whenever a tag's content resizes, and a tag measuring 0 keeps its last height (#11)
+- The `firefox-fix` style's `style.min.css` held uncompiled LESS with the spaces stripped, which made its `calc()` widths invalid. It is compiled now, and a one-line long tag ends in an ellipsis (#11)
+- Extra Networks panel cards get WebP thumbnails generated on demand, cached in the system temp folder; `/get_extra_networks` is a sync route so listing models no longer blocks the event loop. Thumbnail idea from #9, by [@jobobby04](https://github.com/jobobby04)
+- A failed card image falls back through the cached thumbnail, the local preview, the first Civitai image, Forge's placeholder and an inline SVG. Adapted from [@asugonomi](https://github.com/asugonomi)'s fork
+- The LoRA lookup recognizes the alias Forge inserts into the prompt when a LoRA card is clicked
+- Prompts typed or pasted into the textarea are formatted again with the remove-space and remove-last-comma settings; Forge's synthetic `updateInput()` events are still imported as-is, so LoRA toggles keep their exact text (#7)
 
 ### v0.3.5: LoRA Toggle Fix
 > Prompt sync no longer reformats text it merely imports.
@@ -160,6 +180,13 @@
 ---
 
 ## 🗺️ Roadmap
+
+### v0.3.6: Long Tags & Card Previews *(complete)*
+- Tag height follows its content after page load ✅
+- Firefox fix style compiled ✅
+- Thumbnails and fallback previews on panel cards ✅
+- LoRA alias recognized ✅
+- Format settings applied to typed prompts ✅
 
 ### v0.3.5: LoRA Toggle Fix *(complete)*
 - LoRA activation text removed on toggle-off ✅
