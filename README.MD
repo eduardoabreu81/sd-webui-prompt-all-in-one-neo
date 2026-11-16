@@ -484,4 +484,6 @@ Made with ❤️ for the Stable Diffusion community
 
 Original extension by **[Physton](https://github.com/Physton/sd-webui-prompt-all-in-one)** — please ⭐ the original repo if you find this useful.
 
+<sub>Also available merged with TagComplete in <a href="https://github.com/eduardoabreu81/sd-webui-prompt-studio-neo">Prompt Studio Neo</a> · More Forge Neo extensions at <a href="https://eduardoabreu81.github.io/">eduardoabreu81.github.io</a></sub>
+
 </div>
