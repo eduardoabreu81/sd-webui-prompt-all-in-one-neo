@@ -34,7 +34,7 @@
 
 ## 🆕 What's New
 
-### v0.3.6: Long Tags & Card Previews
+### v0.4.0: Long Tags & Card Previews
 
 > Long tags stay inside their box, and the Extra Networks panel loads faster.
 
@@ -94,7 +94,7 @@
 
 ## 📖 Changelog
 
-### v0.3.6: Long Tags & Card Previews
+### v0.4.0: Long Tags & Card Previews
 > Tag heights follow their content, and panel cards load thumbnails.
 
 - `_setTagHeight()` measured each tag once, 50 ms after rendering, and pinned its box to that height. On page load the panel can still be hidden or settling, so long tags got a one-line box and overflowed. A `ResizeObserver` now re-syncs the height whenever a tag's content resizes, and a tag measuring 0 keeps its last height (#11)
@@ -181,7 +181,7 @@
 
 ## 🗺️ Roadmap
 
-### v0.3.6: Long Tags & Card Previews *(complete)*
+### v0.4.0: Long Tags & Card Previews *(complete)*
 - Tag height follows its content after page load ✅
 - Firefox fix style compiled ✅
 - Thumbnails and fallback previews on panel cards ✅
@@ -232,7 +232,7 @@
 - Prompt Format toggle for BREAK / AND visual separator ✅
 - BREAK / AND drag and quick delete behavior preserved in separator mode ✅
 
-### v0.4.0 — Translation Security *(planned)*
+### v0.5.0 — Translation Security *(planned)*
 - Secure storage for translation API credentials
 
 ### v1.0.0 — First Stable Release *(planned)*
